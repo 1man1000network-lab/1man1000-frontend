@@ -37,7 +37,11 @@ export function ListPaginationWrapper<T extends { id: string }>({
   itemClassName,
   paginationPosition = "bottom",
 }: ListPaginationWrapperProps<T>) {
-  const totalPages = meta?.totalPages || 1;
+  const totalPages =
+    meta?.totalPages ||
+    (meta?.total && meta?.limit
+      ? Math.max(1, Math.ceil(meta.total / meta.limit))
+      : 1);
   const hasPagination = totalPages > 1;
 
   const PaginationControls = () => (
