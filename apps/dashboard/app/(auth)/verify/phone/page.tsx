@@ -37,8 +37,11 @@ function VerifyPhonePageInner() {
           router.push("/login");
         }, 1500);
       },
-      onError: () => {
-        setError("Invalid or expired verification code");
+      onError: (error: any) => {
+        setError(
+          error?.response?.data?.message ||
+            "Invalid or expired verification code",
+        );
         setIsLoading(false);
       },
     },
@@ -50,8 +53,11 @@ function VerifyPhonePageInner() {
         setError("");
         setIsLoading(false);
       },
-      onError: () => {
-        setError("Failed to resend verification code");
+      onError: (error: any) => {
+        setError(
+          error?.response?.data?.message ||
+            "Failed to resend verification code",
+        );
         setIsLoading(false);
       },
     },
