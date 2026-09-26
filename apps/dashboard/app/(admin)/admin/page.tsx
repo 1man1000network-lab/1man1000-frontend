@@ -1,6 +1,7 @@
 "use client";
 
 import axios from "axios";
+import { useMemo, useState } from "react";
 import {
   Card,
   CardContent,
@@ -9,7 +10,7 @@ import {
   CardTitle,
 } from "@workspace/ui/components/card";
 import { Badge } from "@workspace/ui/components/badge";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import {
   Users,
   Megaphone,
@@ -58,16 +59,56 @@ type AdminDashboardResponse = {
   userGrowth: Array<{ date: string; users: number }>;
 };
 
+const GROWTH_RANGE_OPTIONS = [
+  { value: "7", label: "Last 7 days" },
+  { value: "30", label: "Last 30 days" },
+  { value: "90", label: "Last 90 days" },
+  { value: "365", label: "Last year" },
+  { value: "custom", label: "Custom range" },
+];
+
+function toDateInputValue(date: Date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
 export default function AdminDashboard() {
+  const [growthRange, setGrowthRange] = useState("30");
+  const [customStart, setCustomStart] = useState("");
+  const [customEnd, setCustomEnd] = useState("");
+
+  const { startDate, endDate, rangeLabel } = useMemo(() => {
+    if (growthRange === "custom") {
+      return {
+        startDate: customStart || undefined,
+        endDate: customEnd || undefined,
+        rangeLabel: "for the selected range",
+      };
+    }
+    const days = parseInt(growthRange, 10);
+    const end = new Date();
+    const start = new Date(end);
+    start.setDate(start.getDate() - (days - 1));
+    return {
+      startDate: toDateInputValue(start),
+      endDate: toDateInputValue(end),
+      rangeLabel:
+        growthRange === "365"
+          ? "over the last year"
+          : `over the last ${days} days`,
+    };
+  }, [growthRange, customStart, customEnd]);
+
   const { data, isLoading, isError, refetch } =
     useQuery<AdminDashboardResponse>({
-      queryKey: ["adminDashboard"],
+      queryKey: ["adminDashboard", startDate, endDate],
       queryFn: async () => {
         const res = await axios.get<AdminDashboardResponse>(
           "/api/admin/dashboard",
+          { params: { startDate, endDate } },
         );
         return res.data;
       },
+      placeholderData: keepPreviousData,
     });
 
   if (isLoading) return <LoadingState text="Loading admin dashboard..." />;
@@ -168,15 +209,50 @@ export default function AdminDashboard() {
 
       <div className="grid gap-5 md:grid-cols-2">
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <div className="p-2 rounded-xl bg-primary/10">
-                <TrendingUp className="h-5 w-5 text-primary" />
+          <CardHeader className="space-y-3">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <CardTitle className="flex items-center gap-2">
+                <div className="p-2 rounded-xl bg-primary/10">
+                  <TrendingUp className="h-5 w-5 text-primary" />
+                </div>
+                Platform Growth
+              </CardTitle>
+              <select
+                value={growthRange}
+                onChange={(e) => setGrowthRange(e.target.value)}
+                className="text-sm border rounded-md px-2 py-1.5 bg-background"
+              >
+                {GROWTH_RANGE_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {growthRange === "custom" && (
+              <div className="flex items-center gap-2">
+                <input
+                  type="date"
+                  value={customStart}
+                  max={customEnd || toDateInputValue(new Date())}
+                  onChange={(e) => setCustomStart(e.target.value)}
+                  className="text-sm border rounded-md px-2 py-1.5 bg-background w-full"
+                  aria-label="Start date"
+                />
+                <span className="text-sm text-muted-foreground">to</span>
+                <input
+                  type="date"
+                  value={customEnd}
+                  min={customStart || undefined}
+                  max={toDateInputValue(new Date())}
+                  onChange={(e) => setCustomEnd(e.target.value)}
+                  className="text-sm border rounded-md px-2 py-1.5 bg-background w-full"
+                  aria-label="End date"
+                />
               </div>
-              Platform Growth
-            </CardTitle>
+            )}
             <CardDescription>
-              User registrations over the last 30 days
+              User registrations {rangeLabel}
             </CardDescription>
           </CardHeader>
           <CardContent>
