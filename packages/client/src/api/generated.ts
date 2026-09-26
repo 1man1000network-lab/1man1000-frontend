@@ -1460,6 +1460,66 @@ export interface AdminDashboardResponseDto {
   userGrowth: AdminUserGrowthDto[];
 }
 
+export interface AdminInfluencerStatsDto {
+  totalEarnings: number;
+  paidEarnings: number;
+  pendingEarnings: number;
+  totalViews: number;
+  totalSubmissions: number;
+  approvedSubmissions: number;
+  rejectedSubmissions: number;
+  pendingSubmissions: number;
+  campaignsParticipated: number;
+  activeCampaigns: number;
+  surveysCompleted: number;
+  surveyEarnings: number;
+}
+
+export interface AdminInfluencerSubmissionDto {
+  id: string;
+  campaignId: string;
+  campaignName: string;
+  brandName?: string;
+  screenshotUrl?: string;
+  views: number;
+  earnedAmount: number;
+  approvalStatus: string;
+  submissionDate: string;
+  reviewNotes?: string;
+}
+
+export interface AdminInfluencerPaymentDto {
+  id: string;
+  campaignId: string;
+  campaignName: string;
+  viewsDelivered: number;
+  ratePerView: number;
+  totalAmount: number;
+  status: string;
+  paymentDate?: string;
+  createdAt: string;
+}
+
+export interface AdminInfluencerCampaignDto {
+  id: string;
+  campaignName: string;
+  brandName?: string;
+  campaignStatus: string;
+  assignmentStatus: string;
+  assignedDate: string;
+  endDate?: string;
+  views: number;
+  earnedAmount: number;
+  submissionsCount: number;
+}
+
+export interface AdminInfluencerOverviewDto {
+  stats: AdminInfluencerStatsDto;
+  submissions: AdminInfluencerSubmissionDto[];
+  payments: AdminInfluencerPaymentDto[];
+  campaigns: AdminInfluencerCampaignDto[];
+}
+
 export type AuthControllerGetVerificationStatusParams = {
 email: string;
 };
@@ -1806,6 +1866,17 @@ pageSize: number;
 export type SurveysControllerGetCrossTabulationParams = {
 questionId: string;
 segmentBy: string;
+};
+
+export type AdminControllerGetDashboardParams = {
+/**
+ * Start date (YYYY-MM-DD) for the platform growth chart. Defaults to 29 days ago.
+ */
+startDate?: string;
+/**
+ * End date (YYYY-MM-DD) for the platform growth chart. Defaults to today.
+ */
+endDate?: string;
 };
 
 /**
@@ -8139,13 +8210,14 @@ export function useSurveysControllerGetCrossTabulation<TData = Awaited<ReturnTyp
  * @summary Get admin dashboard stats and recent activity
  */
 export const adminControllerGetDashboard = (
-    
+    params?: AdminControllerGetDashboardParams,
  signal?: AbortSignal
 ) => {
       
       
       return axiosInstance<AdminDashboardResponseDto>(
-      {url: `/api/admin/dashboard`, method: 'GET', signal
+      {url: `/api/admin/dashboard`, method: 'GET',
+        params, signal
     },
       );
     }
@@ -8153,23 +8225,23 @@ export const adminControllerGetDashboard = (
 
 
 
-export const getAdminControllerGetDashboardQueryKey = () => {
+export const getAdminControllerGetDashboardQueryKey = (params?: AdminControllerGetDashboardParams,) => {
     return [
-    `/api/admin/dashboard`
+    `/api/admin/dashboard`, ...(params ? [params]: [])
     ] as const;
     }
 
     
-export const getAdminControllerGetDashboardQueryOptions = <TData = Awaited<ReturnType<typeof adminControllerGetDashboard>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetDashboard>>, TError, TData>>, }
+export const getAdminControllerGetDashboardQueryOptions = <TData = Awaited<ReturnType<typeof adminControllerGetDashboard>>, TError = unknown>(params?: AdminControllerGetDashboardParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetDashboard>>, TError, TData>>, }
 ) => {
 
 const {query: queryOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getAdminControllerGetDashboardQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getAdminControllerGetDashboardQueryKey(params);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminControllerGetDashboard>>> = ({ signal }) => adminControllerGetDashboard(signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminControllerGetDashboard>>> = ({ signal }) => adminControllerGetDashboard(params, signal);
 
       
 
@@ -8183,7 +8255,7 @@ export type AdminControllerGetDashboardQueryError = unknown
 
 
 export function useAdminControllerGetDashboard<TData = Awaited<ReturnType<typeof adminControllerGetDashboard>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetDashboard>>, TError, TData>> & Pick<
+ params: undefined |  AdminControllerGetDashboardParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetDashboard>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof adminControllerGetDashboard>>,
           TError,
@@ -8193,7 +8265,7 @@ export function useAdminControllerGetDashboard<TData = Awaited<ReturnType<typeof
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useAdminControllerGetDashboard<TData = Awaited<ReturnType<typeof adminControllerGetDashboard>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetDashboard>>, TError, TData>> & Pick<
+ params?: AdminControllerGetDashboardParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetDashboard>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof adminControllerGetDashboard>>,
           TError,
@@ -8203,7 +8275,7 @@ export function useAdminControllerGetDashboard<TData = Awaited<ReturnType<typeof
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useAdminControllerGetDashboard<TData = Awaited<ReturnType<typeof adminControllerGetDashboard>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetDashboard>>, TError, TData>>, }
+ params?: AdminControllerGetDashboardParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetDashboard>>, TError, TData>>, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
@@ -8211,11 +8283,104 @@ export function useAdminControllerGetDashboard<TData = Awaited<ReturnType<typeof
  */
 
 export function useAdminControllerGetDashboard<TData = Awaited<ReturnType<typeof adminControllerGetDashboard>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetDashboard>>, TError, TData>>, }
+ params?: AdminControllerGetDashboardParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetDashboard>>, TError, TData>>, }
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getAdminControllerGetDashboardQueryOptions(options)
+  const queryOptions = getAdminControllerGetDashboardQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * @summary Get influencer profile overview: stats, submissions, payments, campaigns
+ */
+export const adminControllerGetInfluencerOverview = (
+    id: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return axiosInstance<AdminInfluencerOverviewDto>(
+      {url: `/api/admin/influencers/${id}`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getAdminControllerGetInfluencerOverviewQueryKey = (id?: string,) => {
+    return [
+    `/api/admin/influencers/${id}`
+    ] as const;
+    }
+
+    
+export const getAdminControllerGetInfluencerOverviewQueryOptions = <TData = Awaited<ReturnType<typeof adminControllerGetInfluencerOverview>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetInfluencerOverview>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAdminControllerGetInfluencerOverviewQueryKey(id);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminControllerGetInfluencerOverview>>> = ({ signal }) => adminControllerGetInfluencerOverview(id, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetInfluencerOverview>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AdminControllerGetInfluencerOverviewQueryResult = NonNullable<Awaited<ReturnType<typeof adminControllerGetInfluencerOverview>>>
+export type AdminControllerGetInfluencerOverviewQueryError = void
+
+
+export function useAdminControllerGetInfluencerOverview<TData = Awaited<ReturnType<typeof adminControllerGetInfluencerOverview>>, TError = void>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetInfluencerOverview>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminControllerGetInfluencerOverview>>,
+          TError,
+          Awaited<ReturnType<typeof adminControllerGetInfluencerOverview>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminControllerGetInfluencerOverview<TData = Awaited<ReturnType<typeof adminControllerGetInfluencerOverview>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetInfluencerOverview>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminControllerGetInfluencerOverview>>,
+          TError,
+          Awaited<ReturnType<typeof adminControllerGetInfluencerOverview>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminControllerGetInfluencerOverview<TData = Awaited<ReturnType<typeof adminControllerGetInfluencerOverview>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetInfluencerOverview>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get influencer profile overview: stats, submissions, payments, campaigns
+ */
+
+export function useAdminControllerGetInfluencerOverview<TData = Awaited<ReturnType<typeof adminControllerGetInfluencerOverview>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetInfluencerOverview>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdminControllerGetInfluencerOverviewQueryOptions(id,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import {
   usePaymentsControllerFindAll,
   usePaymentsControllerUpdateStatus,
@@ -80,17 +81,26 @@ function PaymentListItem({
 
   return (
     <div className="flex items-center justify-between p-4">
-      <div className="flex items-center gap-4">
+      <Link
+        href={
+          payment.influencer?.id
+            ? `/admin/users/${payment.influencer.id}`
+            : "#"
+        }
+        className="flex items-center gap-4 hover:opacity-80 transition-opacity"
+      >
         <Avatar>
           <AvatarFallback>{avatarText}</AvatarFallback>
         </Avatar>
         <div>
-          <p className="font-medium">{influencerName as string}</p>
+          <p className="font-medium hover:underline">
+            {influencerName as string}
+          </p>
           <p className="text-sm text-muted-foreground">
             {campaignName as string}
           </p>
         </div>
-      </div>
+      </Link>
       <div className="flex items-center gap-4">
         <div className="text-right">
           <p className="font-semibold">

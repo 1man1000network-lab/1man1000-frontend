@@ -532,15 +532,24 @@ export default function CampaignDetailPage() {
                     >
                       <td className="py-3 px-2">
                         <div className="flex items-center gap-2">
-                          <div className="h-8 w-8 rounded-full bg-gradient-to-br from-violet-500 to-violet-600 flex items-center justify-center text-white text-xs font-semibold">
-                            {submission.influencer?.name
-                              ?.slice(0, 2)
-                              .toUpperCase() || "??"}
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium">
+                          <Link
+                            href={
+                              submission.influencer?.id
+                                ? `/admin/users/${submission.influencer.id}`
+                                : "#"
+                            }
+                            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+                          >
+                            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-violet-500 to-violet-600 flex items-center justify-center text-white text-xs font-semibold">
+                              {submission.influencer?.name
+                                ?.slice(0, 2)
+                                .toUpperCase() || "??"}
+                            </div>
+                            <span className="font-medium hover:underline">
                               {submission.influencer?.name || "Unknown"}
                             </span>
+                          </Link>
+                          <div className="flex items-center gap-2">
                             {submission.isDuplicate && (
                               <Badge
                                 variant="outline"
@@ -774,15 +783,29 @@ export default function CampaignDetailPage() {
                       key={assignment.id}
                       className="flex items-center gap-3 p-3 rounded-lg bg-muted/30"
                     >
-                      <div className="h-10 w-10 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-white text-sm font-semibold">
+                      <Link
+                        href={
+                          assignment.influencer?.id
+                            ? `/admin/users/${assignment.influencer.id}`
+                            : "#"
+                        }
+                        className="h-10 w-10 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-white text-sm font-semibold hover:opacity-80 transition-opacity"
+                      >
                         {assignment.influencer?.name
                           ?.slice(0, 2)
                           .toUpperCase() || "??"}
-                      </div>
+                      </Link>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">
+                        <Link
+                          href={
+                            assignment.influencer?.id
+                              ? `/admin/users/${assignment.influencer.id}`
+                              : "#"
+                          }
+                          className="text-sm font-medium truncate block hover:underline"
+                        >
                           {assignment.influencer?.name || "Unknown"}
-                        </p>
+                        </Link>
                         <p className="text-xs text-muted-foreground truncate">
                           {assignment.influencer?.email}
                         </p>
