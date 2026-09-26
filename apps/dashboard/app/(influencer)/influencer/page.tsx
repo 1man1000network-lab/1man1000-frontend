@@ -20,6 +20,7 @@ import {
   ClipboardList,
   Target,
   DollarSign,
+  Trophy,
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -28,6 +29,7 @@ import {
   useCampaignsControllerGetInfluencerCampaigns,
   useCampaignsControllerGetAvailableCampaigns,
   usePaymentsControllerGetInfluencerPayments,
+  useUsersControllerGetLeaderboard,
 } from "@workspace/client";
 import { LoadingState } from "@/components/ui/loading-state";
 import { ErrorState } from "@/components/ui/error-state";
@@ -64,13 +66,20 @@ export default function InfluencerDashboard() {
     isError: isErrorPayments,
     refetch: refetchPayments,
   } = usePaymentsControllerGetInfluencerPayments();
+  const {
+    data: leaderboardResponse,
+    isLoading: isLoadingLeaderboard,
+    isError: isErrorLeaderboard,
+    refetch: refetchLeaderboard,
+  } = useUsersControllerGetLeaderboard({ limit: 10 });
 
   if (
     isLoadingSurveys ||
     isLoadingSurveyStats ||
     isLoadingMyCampaigns ||
     isLoadingAvailableCampaigns ||
-    isLoadingPayments
+    isLoadingPayments ||
+    isLoadingLeaderboard
   ) {
     return <LoadingState text="Loading dashboard..." />;
   }
@@ -80,7 +89,8 @@ export default function InfluencerDashboard() {
     isErrorSurveyStats ||
     isErrorMyCampaigns ||
     isErrorAvailableCampaigns ||
-    isErrorPayments
+    isErrorPayments ||
+    isErrorLeaderboard
   ) {
     return (
       <ErrorState
@@ -92,6 +102,7 @@ export default function InfluencerDashboard() {
           refetchMyCampaigns();
           refetchAvailableCampaigns();
           refetchPayments();
+          refetchLeaderboard();
         }}
       />
     );
@@ -806,6 +817,113 @@ export default function InfluencerDashboard() {
           </Card>
         </div>
       </div>
+
+      {/* Leaderboard - visible on all screen sizes */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <div className="p-2 rounded-xl bg-amber-500/10">
+              <Trophy className="h-5 w-5 text-amber-600" />
+            </div>
+            Leaderboard
+          </CardTitle>
+          <CardDescription>
+            Top influencers ranked by approved views
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {(leaderboardResponse?.entries || []).length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <Trophy className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p className="text-sm">No rankings yet</p>
+              <p className="text-xs mt-1">
+                Be the first — submit screenshots and rack up views!
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {leaderboardResponse!.entries.map((entry) => (
+                <div
+                  key={entry.influencerId}
+                  className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${
+                    entry.isCurrentUser
+                      ? "bg-primary/10 border border-primary/30"
+                      : "bg-muted/30 hover:bg-muted/50"
+                  }`}
+                >
+                  <div
+                    className={`h-8 w-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0 ${
+                      entry.rank === 1
+                        ? "bg-yellow-400 text-yellow-900"
+                        : entry.rank === 2
+                          ? "bg-gray-300 text-gray-700"
+                          : entry.rank === 3
+                            ? "bg-amber-600 text-white"
+                            : "bg-muted text-muted-foreground"
+                    }`}
+                  >
+                    {entry.rank}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">
+                      {entry.name}
+                      {entry.isCurrentUser && (
+                        <span className="ml-2 text-xs font-semibold text-primary">
+                          You
+                        </span>
+                      )}
+                    </p>
+                    {entry.publicInfluencerId && (
+                      <p className="text-xs text-muted-foreground truncate">
+                        {entry.publicInfluencerId}
+                      </p>
+                    )}
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="text-sm font-semibold flex items-center gap-1 justify-end">
+                      <Eye className="h-3.5 w-3.5 text-muted-foreground" />
+                      {entry.totalViews.toLocaleString()}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {entry.submissionsCount} submissions
+                    </p>
+                  </div>
+                </div>
+              ))}
+              {leaderboardResponse?.currentUserRank &&
+                leaderboardResponse.currentUserRank >
+                  leaderboardResponse.entries.length && (
+                  <div className="pt-2 mt-2 border-t">
+                    <div className="flex items-center gap-3 p-3 rounded-lg bg-primary/10 border border-primary/30">
+                      <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-sm font-bold text-primary shrink-0">
+                        {leaderboardResponse.currentUserRank}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium">
+                          Your rank
+                          <span className="ml-2 text-xs font-semibold text-primary">
+                            You
+                          </span>
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Keep submitting to climb the board!
+                        </p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="text-sm font-semibold flex items-center gap-1 justify-end">
+                          <Eye className="h-3.5 w-3.5 text-muted-foreground" />
+                          {(
+                            leaderboardResponse.currentUserViews || 0
+                          ).toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

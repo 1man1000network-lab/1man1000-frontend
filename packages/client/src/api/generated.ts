@@ -304,6 +304,22 @@ export interface UsersStatsResponseDto {
   approvedCount: number;
 }
 
+export interface LeaderboardEntryDto {
+  rank: number;
+  influencerId: string;
+  name: string;
+  publicInfluencerId?: string;
+  totalViews: number;
+  submissionsCount: number;
+  isCurrentUser: boolean;
+}
+
+export interface LeaderboardResponseDto {
+  entries: LeaderboardEntryDto[];
+  currentUserRank?: number;
+  currentUserViews?: number;
+}
+
 export type UpdateUserDtoMobileMoneyNetwork = typeof UpdateUserDtoMobileMoneyNetwork[keyof typeof UpdateUserDtoMobileMoneyNetwork];
 
 
@@ -1614,6 +1630,10 @@ export const UsersControllerGetInfluencersStatus = {
   approved: 'approved',
   rejected: 'rejected',
 } as const;
+
+export type UsersControllerGetLeaderboardParams = {
+limit?: number;
+};
 
 export type CampaignsControllerFindAllParams = {
 status?: CampaignsControllerFindAllStatus;
@@ -3200,6 +3220,100 @@ export function useUsersControllerGetClients<TData = Awaited<ReturnType<typeof u
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getUsersControllerGetClientsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * @summary Top influencers leaderboard ranked by approved views
+ */
+export const usersControllerGetLeaderboard = (
+    params?: UsersControllerGetLeaderboardParams,
+ signal?: AbortSignal
+) => {
+      
+      
+      return axiosInstance<LeaderboardResponseDto>(
+      {url: `/api/users/leaderboard`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+  
+
+
+
+export const getUsersControllerGetLeaderboardQueryKey = (params?: UsersControllerGetLeaderboardParams,) => {
+    return [
+    `/api/users/leaderboard`, ...(params ? [params]: [])
+    ] as const;
+    }
+
+    
+export const getUsersControllerGetLeaderboardQueryOptions = <TData = Awaited<ReturnType<typeof usersControllerGetLeaderboard>>, TError = unknown>(params?: UsersControllerGetLeaderboardParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersControllerGetLeaderboard>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getUsersControllerGetLeaderboardQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof usersControllerGetLeaderboard>>> = ({ signal }) => usersControllerGetLeaderboard(params, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof usersControllerGetLeaderboard>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type UsersControllerGetLeaderboardQueryResult = NonNullable<Awaited<ReturnType<typeof usersControllerGetLeaderboard>>>
+export type UsersControllerGetLeaderboardQueryError = unknown
+
+
+export function useUsersControllerGetLeaderboard<TData = Awaited<ReturnType<typeof usersControllerGetLeaderboard>>, TError = unknown>(
+ params: undefined |  UsersControllerGetLeaderboardParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersControllerGetLeaderboard>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof usersControllerGetLeaderboard>>,
+          TError,
+          Awaited<ReturnType<typeof usersControllerGetLeaderboard>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useUsersControllerGetLeaderboard<TData = Awaited<ReturnType<typeof usersControllerGetLeaderboard>>, TError = unknown>(
+ params?: UsersControllerGetLeaderboardParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersControllerGetLeaderboard>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof usersControllerGetLeaderboard>>,
+          TError,
+          Awaited<ReturnType<typeof usersControllerGetLeaderboard>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useUsersControllerGetLeaderboard<TData = Awaited<ReturnType<typeof usersControllerGetLeaderboard>>, TError = unknown>(
+ params?: UsersControllerGetLeaderboardParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersControllerGetLeaderboard>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Top influencers leaderboard ranked by approved views
+ */
+
+export function useUsersControllerGetLeaderboard<TData = Awaited<ReturnType<typeof usersControllerGetLeaderboard>>, TError = unknown>(
+ params?: UsersControllerGetLeaderboardParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersControllerGetLeaderboard>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getUsersControllerGetLeaderboardQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
