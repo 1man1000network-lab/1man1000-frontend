@@ -18,6 +18,7 @@ import { useAuthControllerLogin } from "@workspace/client";
 import { useAuthStore, User } from "@/lib/auth-store";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import Image from "next/image";
+import { GoogleSignInButton } from "@/components/auth/social-buttons";
 
 type LoginResponse = {
   accessToken: string;
@@ -167,6 +168,10 @@ export default function LoginPage() {
               )}
             </Button>
           </form>
+
+          <div className="mt-4">
+            <GoogleSignInButton />
+          </div>
 
           <div className="mt-6 text-center text-sm text-muted-foreground">
             Don&apos;t have an account?{" "}
