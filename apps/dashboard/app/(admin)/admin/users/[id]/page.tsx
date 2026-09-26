@@ -63,6 +63,60 @@ const FieldRow = ({ label, value }: { label: string; value?: string }) => {
   );
 };
 
+const PaginationBar = ({
+  page,
+  totalPages,
+  limit,
+  limitOptions,
+  onPageChange,
+  onLimitChange,
+}: {
+  page: number;
+  totalPages: number;
+  limit: number;
+  limitOptions: number[];
+  onPageChange: (page: number) => void;
+  onLimitChange: (limit: number) => void;
+}) => (
+  <div className="flex items-center justify-between gap-2 pt-4 mt-4 border-t">
+    <div className="flex items-center gap-2">
+      <span className="text-sm text-muted-foreground">Rows</span>
+      <select
+        value={limit}
+        onChange={(e) => onLimitChange(Number(e.target.value))}
+        className="text-sm border rounded px-2 py-1.5 bg-background"
+      >
+        {limitOptions.map((n) => (
+          <option key={n} value={n}>
+            {n}
+          </option>
+        ))}
+      </select>
+    </div>
+    <div className="flex items-center gap-2">
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => onPageChange(page - 1)}
+        disabled={page === 1}
+      >
+        Previous
+      </Button>
+      <span className="text-sm text-muted-foreground">
+        Page {page} of {totalPages}
+      </span>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => onPageChange(page + 1)}
+        disabled={page === totalPages}
+      >
+        Next
+      </Button>
+    </div>
+  </div>
+);
+
 export default function AdminUserDetailPage() {
   const params = useParams();
   const queryClient = useQueryClient();
@@ -80,6 +134,13 @@ export default function AdminUserDetailPage() {
     url: string;
     campaignName: string;
   } | null>(null);
+
+  const [submissionsPage, setSubmissionsPage] = useState(1);
+  const [submissionsLimit, setSubmissionsLimit] = useState(8);
+  const [campaignsPage, setCampaignsPage] = useState(1);
+  const [campaignsLimit, setCampaignsLimit] = useState(5);
+  const [paymentsPage, setPaymentsPage] = useState(1);
+  const [paymentsLimit, setPaymentsLimit] = useState(5);
   const updateStatusMutation = useUsersControllerUpdateStatus({
     mutation: {
       onSuccess: () => {
@@ -135,6 +196,27 @@ export default function AdminUserDetailPage() {
 
   const isInfluencer = user.role === "influencer";
   const isClient = user.role === "client";
+
+  const paginate = <T,>(items: T[] | undefined, pageNum: number, lim: number) =>
+    (items ?? []).slice((pageNum - 1) * lim, pageNum * lim);
+  const pageCount = (total: number, lim: number) =>
+    Math.max(1, Math.ceil(total / lim));
+
+  const pagedSubmissions = paginate(
+    overview?.submissions,
+    submissionsPage,
+    submissionsLimit,
+  );
+  const pagedCampaigns = paginate(
+    overview?.campaigns,
+    campaignsPage,
+    campaignsLimit,
+  );
+  const pagedPayments = paginate(
+    overview?.payments,
+    paymentsPage,
+    paymentsLimit,
+  );
 
   return (
     <div className="space-y-6">
@@ -205,6 +287,93 @@ export default function AdminUserDetailPage() {
           )}
         </div>
       </div>
+
+      {isInfluencer && overview && (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Total Earned
+              </CardTitle>
+              <CreditCard className="h-4 w-4 text-purple-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                GH₵{overview.stats.paidEarnings.toFixed(2)}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                GH₵{overview.stats.pendingEarnings.toFixed(2)} pending
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Total Views
+              </CardTitle>
+              <Eye className="h-4 w-4 text-blue-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {overview.stats.totalViews.toLocaleString()}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                on approved submissions
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Campaigns
+              </CardTitle>
+              <Megaphone className="h-4 w-4 text-emerald-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {overview.stats.campaignsParticipated}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {overview.stats.activeCampaigns} active
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Submissions
+              </CardTitle>
+              <FileImage className="h-4 w-4 text-orange-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {overview.stats.totalSubmissions}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {overview.stats.approvedSubmissions} approved ·{" "}
+                {overview.stats.pendingSubmissions} pending ·{" "}
+                {overview.stats.rejectedSubmissions} rejected
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Surveys
+              </CardTitle>
+              <ClipboardList className="h-4 w-4 text-indigo-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {overview.stats.surveysCompleted}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                GH₵{overview.stats.surveyEarnings.toFixed(2)} earned
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
@@ -352,91 +521,6 @@ export default function AdminUserDetailPage() {
 
       {isInfluencer && overview && (
         <>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Total Earned
-                </CardTitle>
-                <CreditCard className="h-4 w-4 text-purple-600" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  GH₵{overview.stats.paidEarnings.toFixed(2)}
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  GH₵{overview.stats.pendingEarnings.toFixed(2)} pending
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Total Views
-                </CardTitle>
-                <Eye className="h-4 w-4 text-blue-600" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {overview.stats.totalViews.toLocaleString()}
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  on approved submissions
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Campaigns
-                </CardTitle>
-                <Megaphone className="h-4 w-4 text-emerald-600" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {overview.stats.campaignsParticipated}
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {overview.stats.activeCampaigns} active
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Submissions
-                </CardTitle>
-                <FileImage className="h-4 w-4 text-orange-600" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {overview.stats.totalSubmissions}
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {overview.stats.approvedSubmissions} approved ·{" "}
-                  {overview.stats.pendingSubmissions} pending ·{" "}
-                  {overview.stats.rejectedSubmissions} rejected
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Surveys
-                </CardTitle>
-                <ClipboardList className="h-4 w-4 text-indigo-600" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {overview.stats.surveysCompleted}
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  GH₵{overview.stats.surveyEarnings.toFixed(2)} earned
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-
           <Card>
             <CardHeader>
               <CardTitle>Submitted Screenshots</CardTitle>
@@ -453,7 +537,7 @@ export default function AdminUserDetailPage() {
                 </div>
               ) : (
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                  {overview.submissions.map((submission) => (
+                  {pagedSubmissions.map((submission) => (
                     <div
                       key={submission.id}
                       className="rounded-lg border overflow-hidden"
@@ -506,6 +590,22 @@ export default function AdminUserDetailPage() {
                   ))}
                 </div>
               )}
+              {overview.submissions.length > 0 && (
+                <PaginationBar
+                  page={submissionsPage}
+                  totalPages={pageCount(
+                    overview.submissions.length,
+                    submissionsLimit,
+                  )}
+                  limit={submissionsLimit}
+                  limitOptions={[8, 16, 32, 64]}
+                  onPageChange={setSubmissionsPage}
+                  onLimitChange={(l) => {
+                    setSubmissionsLimit(l);
+                    setSubmissionsPage(1);
+                  }}
+                />
+              )}
             </CardContent>
           </Card>
 
@@ -524,7 +624,7 @@ export default function AdminUserDetailPage() {
                   </p>
                 ) : (
                   <div className="space-y-3">
-                    {overview.campaigns.map((campaign) => (
+                    {pagedCampaigns.map((campaign) => (
                       <Link
                         key={campaign.id}
                         href={`/admin/campaigns/${campaign.id}`}
@@ -553,6 +653,22 @@ export default function AdminUserDetailPage() {
                     ))}
                   </div>
                 )}
+                {overview.campaigns.length > 0 && (
+                  <PaginationBar
+                    page={campaignsPage}
+                    totalPages={pageCount(
+                      overview.campaigns.length,
+                      campaignsLimit,
+                    )}
+                    limit={campaignsLimit}
+                    limitOptions={[5, 10, 20, 50]}
+                    onPageChange={setCampaignsPage}
+                    onLimitChange={(l) => {
+                      setCampaignsLimit(l);
+                      setCampaignsPage(1);
+                    }}
+                  />
+                )}
               </CardContent>
             </Card>
 
@@ -570,7 +686,7 @@ export default function AdminUserDetailPage() {
                   </p>
                 ) : (
                   <div className="space-y-3">
-                    {overview.payments.map((payment) => (
+                    {pagedPayments.map((payment) => (
                       <div
                         key={payment.id}
                         className="flex items-center justify-between p-3 rounded-lg border"
@@ -596,6 +712,22 @@ export default function AdminUserDetailPage() {
                     ))}
                   </div>
                 )}
+                {overview.payments.length > 0 && (
+                  <PaginationBar
+                    page={paymentsPage}
+                    totalPages={pageCount(
+                      overview.payments.length,
+                      paymentsLimit,
+                    )}
+                    limit={paymentsLimit}
+                    limitOptions={[5, 10, 20, 50]}
+                    onPageChange={setPaymentsPage}
+                    onLimitChange={(l) => {
+                      setPaymentsLimit(l);
+                      setPaymentsPage(1);
+                    }}
+                  />
+                )}
               </CardContent>
             </Card>
           </div>
@@ -606,7 +738,7 @@ export default function AdminUserDetailPage() {
         open={!!viewingScreenshot}
         onOpenChange={() => setViewingScreenshot(null)}
       >
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {viewingScreenshot?.campaignName || "Submission"} — Screenshot
@@ -616,7 +748,7 @@ export default function AdminUserDetailPage() {
             <img
               src={viewingScreenshot.url}
               alt="Submission screenshot"
-              className="w-full rounded-lg"
+              className="max-h-[75vh] w-auto max-w-full mx-auto rounded-lg object-contain"
             />
           )}
         </DialogContent>
