@@ -46,9 +46,10 @@ export default function LoginPage() {
         if (response.requiresVerification) {
           // Navigate to appropriate verification screen
           const phone = response.user.phone || "";
+          const role = response.user.role || "";
           if (!response.emailVerified) {
             router.push(
-              `/verify/email?email=${encodeURIComponent(email)}&phone=${encodeURIComponent(phone)}`,
+              `/verify/email?email=${encodeURIComponent(email)}&phone=${encodeURIComponent(phone)}&role=${encodeURIComponent(role)}`,
             );
           } else if (!response.phoneVerified) {
             router.push(

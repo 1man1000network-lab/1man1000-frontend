@@ -25,6 +25,7 @@ function VerifyEmailPageInner() {
   const searchParams = useSearchParams();
   const email = searchParams.get("email") || "";
   const phone = searchParams.get("phone") || "";
+  const role = searchParams.get("role") || "";
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -33,9 +34,13 @@ function VerifyEmailPageInner() {
     mutation: {
       onSuccess: () => {
         setIsLoading(false);
-        router.push(
-          `/verify/phone?email=${encodeURIComponent(email)}&phone=${encodeURIComponent(phone)}`,
-        );
+        if (role === "influencer") {
+          router.push(
+            `/verify/phone?email=${encodeURIComponent(email)}&phone=${encodeURIComponent(phone)}`,
+          );
+        } else {
+          router.push("/login");
+        }
       },
       onError: () => {
         setError("Invalid or expired verification code");
