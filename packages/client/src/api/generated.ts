@@ -163,6 +163,24 @@ export interface ProfileResponseDto {
   createdAt: string;
 }
 
+export type SocialAuthDtoRole = typeof SocialAuthDtoRole[keyof typeof SocialAuthDtoRole];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const SocialAuthDtoRole = {
+  client: 'client',
+  influencer: 'influencer',
+} as const;
+
+export interface SocialAuthDto {
+  provider: string;
+  email: string;
+  firstName: string;
+  lastName?: string;
+  providerAccountId: string;
+  role?: SocialAuthDtoRole;
+}
+
 export interface SendVerificationCodeDto {
   email: string;
   phone: string;
@@ -1428,12 +1446,18 @@ export interface AdminRecentActivityDto {
   createdAt: string;
 }
 
+export interface AdminUserGrowthDto {
+  date: string;
+  users: number;
+}
+
 export interface AdminDashboardResponseDto {
   stats: AdminDashboardStatsDto;
   pendingApprovals: AdminPendingApprovalsDto;
   topInfluencers: AdminTopInfluencerDto[];
   surveyStats: AdminSurveyStatsDto;
   recentActivity: AdminRecentActivityDto[];
+  userGrowth: AdminUserGrowthDto[];
 }
 
 export type AuthControllerGetVerificationStatusParams = {
@@ -1625,14 +1649,7 @@ campaignId?: string;
 influencerId?: string;
 approvalStatus?: string;
 search?: string;
-/**
- * @minimum 1
- */
 page?: number;
-/**
- * @minimum 1
- * @maximum 100
- */
 limit?: number;
 };
 
@@ -1731,6 +1748,31 @@ export type PaymentsControllerFindAllSortOrder = typeof PaymentsControllerFindAl
 export const PaymentsControllerFindAllSortOrder = {
   asc: 'asc',
   desc: 'desc',
+} as const;
+
+export type PaymentsControllerExportPaymentsToCsvParams = {
+/**
+ * Filter by campaign
+ */
+campaignId?: string;
+/**
+ * Filter by influencer
+ */
+influencerId?: string;
+status?: PaymentsControllerExportPaymentsToCsvStatus;
+/**
+ * Search by influencer name or campaign name
+ */
+search?: string;
+};
+
+export type PaymentsControllerExportPaymentsToCsvStatus = typeof PaymentsControllerExportPaymentsToCsvStatus[keyof typeof PaymentsControllerExportPaymentsToCsvStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PaymentsControllerExportPaymentsToCsvStatus = {
+  pending: 'pending',
+  paid: 'paid',
 } as const;
 
 export type PaymentsControllerGetInfluencerPaymentsParams = {
@@ -1989,6 +2031,71 @@ export function useAuthControllerGetProfile<TData = Awaited<ReturnType<typeof au
 
 
 
+/**
+ * @summary Social sign-in (called by NextAuth)
+ */
+export const authControllerSocialAuth = (
+    socialAuthDto: SocialAuthDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return axiosInstance<LoginResponseDto>(
+      {url: `/api/auth/social`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: socialAuthDto, signal
+    },
+      );
+    }
+  
+
+
+export const getAuthControllerSocialAuthMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authControllerSocialAuth>>, TError,{data: SocialAuthDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof authControllerSocialAuth>>, TError,{data: SocialAuthDto}, TContext> => {
+
+const mutationKey = ['authControllerSocialAuth'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof authControllerSocialAuth>>, {data: SocialAuthDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  authControllerSocialAuth(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AuthControllerSocialAuthMutationResult = NonNullable<Awaited<ReturnType<typeof authControllerSocialAuth>>>
+    export type AuthControllerSocialAuthMutationBody = SocialAuthDto
+    export type AuthControllerSocialAuthMutationError = void
+
+    /**
+ * @summary Social sign-in (called by NextAuth)
+ */
+export const useAuthControllerSocialAuth = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authControllerSocialAuth>>, TError,{data: SocialAuthDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof authControllerSocialAuth>>,
+        TError,
+        {data: SocialAuthDto},
+        TContext
+      > => {
+
+      const mutationOptions = getAuthControllerSocialAuthMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
 /**
  * @summary Send verification codes to email and phone
  */
@@ -6179,6 +6286,101 @@ export function usePaymentsControllerFindAll<TData = Awaited<ReturnType<typeof p
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getPaymentsControllerFindAllQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * @summary Export payments to CSV (Admin only)
+ */
+export const paymentsControllerExportPaymentsToCsv = (
+    params?: PaymentsControllerExportPaymentsToCsvParams,
+ signal?: AbortSignal
+) => {
+      
+      
+      return axiosInstance<Blob>(
+      {url: `/api/payments/export`, method: 'GET',
+        params,
+        responseType: 'blob', signal
+    },
+      );
+    }
+  
+
+
+
+export const getPaymentsControllerExportPaymentsToCsvQueryKey = (params?: PaymentsControllerExportPaymentsToCsvParams,) => {
+    return [
+    `/api/payments/export`, ...(params ? [params]: [])
+    ] as const;
+    }
+
+    
+export const getPaymentsControllerExportPaymentsToCsvQueryOptions = <TData = Awaited<ReturnType<typeof paymentsControllerExportPaymentsToCsv>>, TError = unknown>(params?: PaymentsControllerExportPaymentsToCsvParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof paymentsControllerExportPaymentsToCsv>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getPaymentsControllerExportPaymentsToCsvQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof paymentsControllerExportPaymentsToCsv>>> = ({ signal }) => paymentsControllerExportPaymentsToCsv(params, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof paymentsControllerExportPaymentsToCsv>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type PaymentsControllerExportPaymentsToCsvQueryResult = NonNullable<Awaited<ReturnType<typeof paymentsControllerExportPaymentsToCsv>>>
+export type PaymentsControllerExportPaymentsToCsvQueryError = unknown
+
+
+export function usePaymentsControllerExportPaymentsToCsv<TData = Awaited<ReturnType<typeof paymentsControllerExportPaymentsToCsv>>, TError = unknown>(
+ params: undefined |  PaymentsControllerExportPaymentsToCsvParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof paymentsControllerExportPaymentsToCsv>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof paymentsControllerExportPaymentsToCsv>>,
+          TError,
+          Awaited<ReturnType<typeof paymentsControllerExportPaymentsToCsv>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function usePaymentsControllerExportPaymentsToCsv<TData = Awaited<ReturnType<typeof paymentsControllerExportPaymentsToCsv>>, TError = unknown>(
+ params?: PaymentsControllerExportPaymentsToCsvParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof paymentsControllerExportPaymentsToCsv>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof paymentsControllerExportPaymentsToCsv>>,
+          TError,
+          Awaited<ReturnType<typeof paymentsControllerExportPaymentsToCsv>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function usePaymentsControllerExportPaymentsToCsv<TData = Awaited<ReturnType<typeof paymentsControllerExportPaymentsToCsv>>, TError = unknown>(
+ params?: PaymentsControllerExportPaymentsToCsvParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof paymentsControllerExportPaymentsToCsv>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Export payments to CSV (Admin only)
+ */
+
+export function usePaymentsControllerExportPaymentsToCsv<TData = Awaited<ReturnType<typeof paymentsControllerExportPaymentsToCsv>>, TError = unknown>(
+ params?: PaymentsControllerExportPaymentsToCsvParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof paymentsControllerExportPaymentsToCsv>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getPaymentsControllerExportPaymentsToCsvQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

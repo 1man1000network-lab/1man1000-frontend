@@ -199,7 +199,7 @@ export default function AdminUsersPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   const [page, setPage] = useState(1);
-  const [limit] = useState(10);
+  const [limit, setLimit] = useState(10);
   const [userToDelete, setUserToDelete] = useState<
     (typeof users)[number] | null
   >(null);
@@ -478,6 +478,11 @@ export default function AdminUsersPage() {
                 meta={response?.meta}
                 page={page}
                 onPageChange={setPage}
+                limit={limit}
+                onLimitChange={(newLimit) => {
+                  setLimit(newLimit);
+                  setPage(1);
+                }}
               />
             </CardContent>
           </Card>

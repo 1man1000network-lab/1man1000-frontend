@@ -80,9 +80,9 @@ export default function CampaignDetailPage() {
   const campaignId = params.id as string;
   const [showAssetModal, setShowAssetModal] = useState(false);
   const [submissionsPage, setSubmissionsPage] = useState(1);
-  const submissionsLimit = 10;
+  const [submissionsLimit, setSubmissionsLimit] = useState(10);
   const [assignmentsPage, setAssignmentsPage] = useState(1);
-  const assignmentsLimit = 10;
+  const [assignmentsLimit, setAssignmentsLimit] = useState(10);
   const [sortBy, setSortBy] = useState<"submissionDate" | "views">(
     "submissionDate",
   );
@@ -435,9 +435,25 @@ export default function CampaignDetailPage() {
               </Button>
             </div>
           </div>
-          {submissionsMeta &&
-            (submissionsMeta as { totalPages?: number }).totalPages! > 1 && (
+          {submissionsMeta && (
               <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 mr-2">
+                  <span className="text-sm text-muted-foreground">Rows</span>
+                  <select
+                    value={submissionsLimit}
+                    onChange={(e) => {
+                      setSubmissionsLimit(Number(e.target.value));
+                      setSubmissionsPage(1);
+                    }}
+                    className="text-sm border rounded px-2 py-1.5 bg-background"
+                  >
+                    {[10, 20, 50, 100].map((n) => (
+                      <option key={n} value={n}>
+                        {n}
+                      </option>
+                    ))}
+                  </select>
+                </div>
                 <Button
                   variant="outline"
                   size="sm"
@@ -776,9 +792,25 @@ export default function CampaignDetailPage() {
               </div>
             )}
           </CardContent>
-          {c.assignments &&
-            c.assignments.length > assignmentsLimit && (
+          {c.assignments && c.assignments.length > 0 && (
               <div className="border-t p-4 flex items-center justify-between gap-2 bg-card shrink-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">Rows</span>
+                  <select
+                    value={assignmentsLimit}
+                    onChange={(e) => {
+                      setAssignmentsLimit(Number(e.target.value));
+                      setAssignmentsPage(1);
+                    }}
+                    className="text-sm border rounded px-2 py-1.5 bg-background"
+                  >
+                    {[10, 20, 50, 100].map((n) => (
+                      <option key={n} value={n}>
+                        {n}
+                      </option>
+                    ))}
+                  </select>
+                </div>
                 <Button
                   variant="outline"
                   size="sm"

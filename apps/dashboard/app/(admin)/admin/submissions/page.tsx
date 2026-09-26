@@ -235,7 +235,7 @@ export default function AdminSubmissionsPage() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [activeTab, setActiveTab] = useState("pending");
   const [page, setPage] = useState(1);
-  const [limit] = useState(20);
+  const [limit, setLimit] = useState(20);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(searchQuery), 300);
@@ -505,6 +505,11 @@ export default function AdminSubmissionsPage() {
                 meta={response?.meta}
                 page={page}
                 onPageChange={setPage}
+                limit={limit}
+                onLimitChange={(newLimit) => {
+                  setLimit(newLimit);
+                  setPage(1);
+                }}
               />
             </CardContent>
           </Card>

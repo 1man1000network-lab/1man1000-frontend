@@ -64,7 +64,7 @@ export default function CampaignDetailPage() {
   const queryClient = useQueryClient();
   const campaignId = params.id as string;
   const [submissionsPage, setSubmissionsPage] = useState(1);
-  const submissionsLimit = 10;
+  const [submissionsLimit, setSubmissionsLimit] = useState(10);
   const [sortBy, setSortBy] = useState<"submissionDate" | "views">(
     "submissionDate",
   );
@@ -306,9 +306,25 @@ export default function CampaignDetailPage() {
               </Button>
             </div>
           </div>
-          {submissionsMeta &&
-            (submissionsMeta as { totalPages?: number }).totalPages! > 1 && (
+          {submissionsMeta && (
               <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 mr-2">
+                  <span className="text-sm text-muted-foreground">Rows</span>
+                  <select
+                    value={submissionsLimit}
+                    onChange={(e) => {
+                      setSubmissionsLimit(Number(e.target.value));
+                      setSubmissionsPage(1);
+                    }}
+                    className="text-sm border rounded px-2 py-1.5 bg-background"
+                  >
+                    {[10, 20, 50, 100].map((n) => (
+                      <option key={n} value={n}>
+                        {n}
+                      </option>
+                    ))}
+                  </select>
+                </div>
                 <Button
                   variant="outline"
                   size="sm"

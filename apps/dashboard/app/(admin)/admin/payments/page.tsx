@@ -5,6 +5,8 @@ import {
   usePaymentsControllerFindAll,
   usePaymentsControllerUpdateStatus,
   usePaymentsControllerGetAdminStats,
+  useCampaignsControllerFindAll,
+  paymentsControllerExportPaymentsToCsv,
   type PaymentResponseDto,
   type UpdatePaymentStatusDto,
 } from "@workspace/client";
@@ -42,6 +44,7 @@ import {
   DollarSign,
   TrendingUp,
   ArrowUpDown,
+  Download,
 } from "lucide-react";
 import { ErrorState } from "@/components/ui/error-state";
 import { ListPaginationWrapper } from "@/components/ui/list-pagination-wrapper";
@@ -124,9 +127,11 @@ export default function AdminPaymentsPage() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [activeTab, setActiveTab] = useState("pending");
   const [page, setPage] = useState(1);
-  const [limit] = useState(20);
+  const [limit, setLimit] = useState(20);
   const [sortBy, setSortBy] = useState<"amount" | "date">("date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [campaignId, setCampaignId] = useState("");
+  const [isExporting, setIsExporting] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [selectedPayment, setSelectedPayment] =
     useState<PaymentResponseDto | null>(null);
@@ -153,10 +158,16 @@ export default function AdminPaymentsPage() {
     limit,
     page,
     status: statusParam,
+    campaignId: campaignId || undefined,
     sortBy,
     sortOrder,
     search: debouncedSearch || undefined,
   });
+
+  const { data: campaignsResponse } = useCampaignsControllerFindAll({
+    limit: 100,
+  });
+  const campaigns = campaignsResponse?.data || [];
 
   const {
     data: stats,
@@ -175,6 +186,30 @@ export default function AdminPaymentsPage() {
   const handleMarkPaid = (payment: Payment) => {
     setSelectedPayment(payment);
     setConfirmOpen(true);
+  };
+
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      const response = await paymentsControllerExportPaymentsToCsv({
+        campaignId: campaignId || undefined,
+        status: statusParam,
+        search: debouncedSearch || undefined,
+      });
+
+      const url = window.URL.createObjectURL(response);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `payments-export-${new Date().toISOString().split("T")[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error("Export failed:", error);
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   if (isError || isErrorStats) {
@@ -293,6 +328,21 @@ export default function AdminPaymentsPage() {
         </div>
         <div className="flex items-center gap-2">
           <select
+            value={campaignId}
+            onChange={(e) => {
+              setCampaignId(e.target.value);
+              setPage(1);
+            }}
+            className="text-sm border rounded px-3 py-2 bg-background"
+          >
+            <option value="">All Campaigns</option>
+            {campaigns.map((campaign) => (
+              <option key={campaign.id} value={campaign.id}>
+                {(campaign.title as unknown as string) || campaign.brandName}
+              </option>
+            ))}
+          </select>
+          <select
             value={sortBy}
             onChange={(e) => {
               setSortBy(e.target.value as "amount" | "date");
@@ -313,6 +363,15 @@ export default function AdminPaymentsPage() {
           >
             <ArrowUpDown className="h-4 w-4 mr-2" />
             {sortOrder === "asc" ? "Ascending" : "Descending"}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExport}
+            disabled={isExporting}
+          >
+            <Download className="h-4 w-4 mr-2" />
+            {isExporting ? "Exporting..." : "Export CSV"}
           </Button>
         </div>
       </div>
@@ -350,6 +409,11 @@ export default function AdminPaymentsPage() {
                 meta={paymentsMeta}
                 page={page}
                 onPageChange={setPage}
+                limit={limit}
+                onLimitChange={(newLimit) => {
+                  setLimit(newLimit);
+                  setPage(1);
+                }}
               />
             </CardContent>
           </Card>

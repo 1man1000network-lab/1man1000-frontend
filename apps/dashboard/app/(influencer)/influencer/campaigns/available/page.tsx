@@ -20,7 +20,7 @@ import { ErrorState } from "@/components/ui/error-state";
 export default function AvailableCampaignsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(1);
-  const [limit] = useState(12);
+  const [limit, setLimit] = useState(12);
 
   const {
     data: response,
@@ -155,8 +155,25 @@ export default function AvailableCampaignsPage() {
             ))}
           </div>
 
-          {(totalPages as number) > 1 && (
+          {(totalPages as number) >= 1 && (
             <div className="flex items-center justify-center gap-2 pt-4">
+              <div className="flex items-center gap-2 mr-2">
+                <span className="text-sm text-muted-foreground">Rows</span>
+                <select
+                  value={limit}
+                  onChange={(e) => {
+                    setLimit(Number(e.target.value));
+                    setPage(1);
+                  }}
+                  className="text-sm border rounded px-2 py-1.5 bg-background"
+                >
+                  {[12, 24, 48, 96].map((n) => (
+                    <option key={n} value={n}>
+                      {n}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <Button
                 variant="outline"
                 size="sm"

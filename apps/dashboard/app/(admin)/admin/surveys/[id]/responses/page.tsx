@@ -33,7 +33,7 @@ export default function AdminSurveyResponsesPage() {
   const [selectedResponse, setSelectedResponse] =
     useState<GetSurveyResponseDto | null>(null);
   const [page, setPage] = useState(1);
-  const [limit] = useState(10);
+  const [limit, setLimit] = useState(10);
 
   const {
     data: survey,
@@ -202,10 +202,15 @@ export default function AdminSurveyResponsesPage() {
                 emptyMessage="No responses found"
                 page={page}
                 onPageChange={setPage}
+                limit={limit}
+                onLimitChange={(newLimit) => {
+                  setLimit(newLimit);
+                  setPage(1);
+                }}
                 meta={{
                   total: surveyResponses?.total || 0,
                   page: surveyResponses?.page || 1,
-                  limit: surveyResponses?.pageSize || 10,
+                  limit,
                 }}
               />
             </CardContent>

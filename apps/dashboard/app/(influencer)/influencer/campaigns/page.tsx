@@ -45,7 +45,7 @@ export default function InfluencerCampaignsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("active");
   const [page, setPage] = useState(1);
-  const [limit] = useState(20);
+  const [limit, setLimit] = useState(20);
   const [sortBy, setSortBy] = useState("assignedDate");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [selectedAsset, setSelectedAsset] = useState<{
@@ -123,8 +123,25 @@ export default function InfluencerCampaignsPage() {
         </Button>
       </div>
 
-      {response?.meta && response.meta.totalPages > 1 && (
+      {response?.meta && (
         <div className="flex items-center justify-center gap-2">
+          <div className="flex items-center gap-2 mr-2">
+            <span className="text-sm text-muted-foreground">Rows</span>
+            <select
+              value={limit}
+              onChange={(e) => {
+                setLimit(Number(e.target.value));
+                setPage(1);
+              }}
+              className="text-sm border rounded px-2 py-1.5 bg-background"
+            >
+              {[10, 20, 50, 100].map((n) => (
+                <option key={n} value={n}>
+                  {n}
+                </option>
+              ))}
+            </select>
+          </div>
           <Button
             variant="outline"
             size="sm"

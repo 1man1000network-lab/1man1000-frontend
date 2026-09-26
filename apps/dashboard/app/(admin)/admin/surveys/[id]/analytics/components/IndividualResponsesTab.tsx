@@ -17,6 +17,8 @@ interface IndividualResponsesTabProps {
   currentPage: number;
   totalPages: number;
   setCurrentPage: (page: number) => void;
+  pageSize: number;
+  setPageSize: (size: number) => void;
   onExport: () => void;
   exportLoading: boolean;
   isLoading?: boolean;
@@ -31,6 +33,8 @@ export function IndividualResponsesTab(props: IndividualResponsesTabProps) {
     currentPage,
     totalPages,
     setCurrentPage,
+    pageSize,
+    setPageSize,
     onExport,
     exportLoading,
     isLoading = false,
@@ -159,7 +163,21 @@ export function IndividualResponsesTab(props: IndividualResponsesTabProps) {
           <p className="text-sm text-muted-foreground">
             Showing {startIndex} to {endIndex} of {totalResponses} responses
           </p>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 mr-2">
+              <span className="text-sm text-muted-foreground">Rows</span>
+              <select
+                value={pageSize}
+                onChange={(e) => setPageSize(Number(e.target.value))}
+                className="text-sm border rounded px-2 py-1.5 bg-background"
+              >
+                {[10, 20, 50, 100].map((n) => (
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
+                ))}
+              </select>
+            </div>
             <Button
               variant="outline"
               disabled={currentPage === 1}

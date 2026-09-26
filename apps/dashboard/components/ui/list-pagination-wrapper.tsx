@@ -20,6 +20,9 @@ interface ListPaginationWrapperProps<T> {
   meta?: Meta;
   page: number;
   onPageChange: (page: number) => void;
+  limit?: number;
+  onLimitChange?: (limit: number) => void;
+  limitOptions?: number[];
   className?: string;
   itemClassName?: string;
   paginationPosition?: "top" | "bottom" | "both";
@@ -33,6 +36,9 @@ export function ListPaginationWrapper<T extends { id: string }>({
   meta,
   page,
   onPageChange,
+  limit,
+  onLimitChange,
+  limitOptions = [10, 20, 50, 100],
   className,
   itemClassName,
   paginationPosition = "bottom",
@@ -43,9 +49,26 @@ export function ListPaginationWrapper<T extends { id: string }>({
       ? Math.max(1, Math.ceil(meta.total / meta.limit))
       : 1);
   const hasPagination = totalPages > 1;
+  const showControls = hasPagination || !!onLimitChange;
 
   const PaginationControls = () => (
     <div className="flex items-center justify-center gap-2 py-4">
+      {onLimitChange && (
+        <div className="flex items-center gap-2 mr-2">
+          <span className="text-sm text-muted-foreground">Rows per page</span>
+          <select
+            value={limit}
+            onChange={(e) => onLimitChange(Number(e.target.value))}
+            className="text-sm border rounded px-2 py-1.5 bg-background"
+          >
+            {limitOptions.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
       <Button
         variant="outline"
         size="sm"
@@ -96,7 +119,7 @@ export function ListPaginationWrapper<T extends { id: string }>({
 
   return (
     <div className={cn("space-y-4", className)}>
-      {hasPagination && paginationPosition !== "bottom" && (
+      {showControls && paginationPosition !== "bottom" && (
         <PaginationControls />
       )}
 
@@ -114,7 +137,7 @@ export function ListPaginationWrapper<T extends { id: string }>({
         ))}
       </div>
 
-      {hasPagination && paginationPosition !== "top" && <PaginationControls />}
+      {showControls && paginationPosition !== "top" && <PaginationControls />}
     </div>
   );
 }

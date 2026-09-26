@@ -33,7 +33,7 @@ import { ListPaginationWrapper } from "@/components/ui/list-pagination-wrapper";
 
 export default function InfluencerEarningsPage() {
   const [page, setPage] = useState(1);
-  const [limit] = useState(10);
+  const [limit, setLimit] = useState(10);
 
   const {
     data: earningsSummary,
@@ -219,6 +219,11 @@ export default function InfluencerEarningsPage() {
               meta={paymentsMeta}
               page={page}
               onPageChange={setPage}
+              limit={limit}
+              onLimitChange={(newLimit) => {
+                setLimit(newLimit);
+                setPage(1);
+              }}
             />
           </CardContent>
         </Card>

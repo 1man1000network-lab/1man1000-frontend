@@ -34,6 +34,7 @@ export default function SurveyAnalyticsPage() {
   const [activeTab, setActiveTab] = useState("summary");
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [selectedQuestion, setSelectedQuestion] = useState<string>("");
   const [selectedSegment, setSelectedSegment] = useState<
     "age" | "gender" | "location"
@@ -51,7 +52,7 @@ export default function SurveyAnalyticsPage() {
   // Fetch individual responses with pagination
   const { data: responsesData } = useSurveysControllerGetIndividualResponses(
     surveyId,
-    { page: currentPage, pageSize: 10 },
+    { page: currentPage, pageSize },
     { query: { enabled: activeTab === "responses" } },
   );
 
@@ -360,6 +361,11 @@ export default function SurveyAnalyticsPage() {
             currentPage={currentPage}
             totalPages={totalPages}
             setCurrentPage={setCurrentPage}
+            pageSize={pageSize}
+            setPageSize={(size) => {
+              setPageSize(size);
+              setCurrentPage(1);
+            }}
             onExport={exportToExcel}
             exportLoading={exportLoading}
           />
