@@ -318,6 +318,10 @@ export default function RegisterClientPage() {
                   required
                   disabled={isLoading}
                 />
+                <p className="text-xs text-muted-foreground">
+                  Please use your full legal name (first and last name), not a
+                  nickname.
+                </p>
               </div>
 
               <div className="space-y-2">
