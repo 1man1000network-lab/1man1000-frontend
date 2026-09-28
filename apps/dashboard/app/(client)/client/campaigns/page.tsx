@@ -220,7 +220,7 @@ export default function ClientCampaignsPage() {
                     <div className="flex items-center justify-between text-sm">
                       <div className="flex items-center gap-1.5 text-muted-foreground">
                         <Users className="h-4 w-4" />
-                        {campaign._count.assignments || 0} influencers
+                        {campaign._count?.assignments || 0} influencers
                       </div>
                       <div className="font-semibold">
                         GH₵{campaign.budget?.toLocaleString()}

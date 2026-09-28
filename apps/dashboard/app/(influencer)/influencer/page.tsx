@@ -21,6 +21,7 @@ import {
   Target,
   DollarSign,
   Trophy,
+  Users,
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -153,6 +154,7 @@ export default function InfluencerDashboard() {
       paymentTiers: tiers,
       potential: { min: potentialMin, max: potentialMax },
       status: c.status,
+      participants: c._count?.assignments ?? 0,
     };
   });
 
@@ -172,6 +174,7 @@ export default function InfluencerDashboard() {
         deadline: daysLeft > 0 ? `${daysLeft} days left` : "Expired",
         status: c.assignmentStatus || "assigned",
         endDate: c.endDate, // Add original endDate for isCampaignExpired check
+        participants: c._count?.assignments ?? 0,
       };
     });
 
@@ -269,6 +272,14 @@ export default function InfluencerDashboard() {
                       <p className="text-xs text-muted-foreground">
                         {campaign.brand}
                       </p>
+                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Users className="h-3 w-3" />
+                        {campaign.participants}{" "}
+                        {campaign.participants === 1
+                          ? "influencer"
+                          : "influencers"}{" "}
+                        participating
+                      </p>
                     </div>
                     <div className="flex items-center gap-3">
                       <span className="text-xs text-muted-foreground">
@@ -356,6 +367,13 @@ export default function InfluencerDashboard() {
                           ) : (
                             "Tiered pricing"
                           )}
+                        </span>
+                        <span className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Users className="h-3 w-3" />
+                          {campaign.participants}{" "}
+                          {campaign.participants === 1
+                            ? "influencer"
+                            : "influencers"}
                         </span>
                       </div>
                     </div>
@@ -503,6 +521,14 @@ export default function InfluencerDashboard() {
                         <p className="text-xs text-muted-foreground">
                           {campaign.brand}
                         </p>
+                        <p className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Users className="h-3 w-3" />
+                          {campaign.participants}{" "}
+                          {campaign.participants === 1
+                            ? "influencer"
+                            : "influencers"}{" "}
+                          participating
+                        </p>
                       </div>
                       <div className="flex items-center gap-3">
                         <span className="text-xs text-muted-foreground">
@@ -590,6 +616,13 @@ export default function InfluencerDashboard() {
                             ) : (
                               "Tiered pricing"
                             )}
+                          </span>
+                          <span className="text-xs text-muted-foreground flex items-center gap-1">
+                            <Users className="h-3 w-3" />
+                            {campaign.participants}{" "}
+                            {campaign.participants === 1
+                              ? "influencer"
+                              : "influencers"}
                           </span>
                         </div>
                       </div>

@@ -461,6 +461,10 @@ export default function AdminUserDetailPage() {
                       : undefined
                   }
                 />
+                <FieldRow
+                  label="City / Town / Village"
+                  value={user.city || undefined}
+                />
                 {user.country === "GHA" ? (
                   <>
                     <FieldRow

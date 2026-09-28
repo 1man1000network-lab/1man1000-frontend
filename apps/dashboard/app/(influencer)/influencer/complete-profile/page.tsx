@@ -35,6 +35,7 @@ import { ErrorState } from "@/components/ui/error-state";
 
 type FormState = {
   country: string;
+  city: string;
   mobileMoneyNumber: string;
   mobileMoneyNetwork: "MTN" | "Vodafone" | "AirtelTigo" | "";
   bankName: string;
@@ -104,6 +105,7 @@ export default function InfluencerCompleteProfilePage() {
 
   const [formData, setFormData] = useState<FormState>({
     country: "",
+    city: "",
     mobileMoneyNumber: "",
     mobileMoneyNetwork: "",
     bankName: "",
@@ -120,6 +122,7 @@ export default function InfluencerCompleteProfilePage() {
     const profile = typedProfile as ProfileResponseDto;
     setFormData({
       country: profile.country || "",
+      city: profile.city || "",
       mobileMoneyNumber: profile.mobileMoneyNumber || "",
       mobileMoneyNetwork: profile.mobileMoneyNetwork || "",
       bankName: profile.bankName || "",
@@ -191,6 +194,10 @@ export default function InfluencerCompleteProfilePage() {
       setFormError("Country is required");
       return false;
     }
+    if (!formData.city.trim()) {
+      setFormError("City / Town / Village is required");
+      return false;
+    }
     if (isGhana) {
       if (!formData.mobileMoneyNumber.trim()) {
         setFormError("Mobile money number is required");
@@ -241,6 +248,7 @@ export default function InfluencerCompleteProfilePage() {
       bankAccountNumber?: string;
     } = {
       country: formData.country,
+      city: formData.city,
       mobileMoneyNumber: isGhana ? formData.mobileMoneyNumber : undefined,
       mobileMoneyNetwork: isGhana
         ? (formData.mobileMoneyNetwork as UpdateUserDto["mobileMoneyNetwork"])
@@ -281,15 +289,31 @@ export default function InfluencerCompleteProfilePage() {
             <div className="space-y-4">
               <h3 className="text-lg font-medium">Payment Information</h3>
 
-              <div className="space-y-2">
-                <Label htmlFor="country">Country *</Label>
-                <CountryDropdown
-                  placeholder="Select country"
-                  defaultValue={formData.country}
-                  onChange={(country) =>
-                    setFormData((p) => ({ ...p, country: country.alpha3 }))
-                  }
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="country">Country *</Label>
+                  <CountryDropdown
+                    placeholder="Select country"
+                    defaultValue={formData.country}
+                    onChange={(country) =>
+                      setFormData((p) => ({ ...p, country: country.alpha3 }))
+                    }
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="city">City / Town / Village *</Label>
+                  <Input
+                    id="city"
+                    type="text"
+                    placeholder="e.g., Accra, Kumasi, Tamale"
+                    value={formData.city}
+                    onChange={(e) =>
+                      setFormData((p) => ({ ...p, city: e.target.value }))
+                    }
+                    required
+                  />
+                </div>
               </div>
 
               {isGhana ? (

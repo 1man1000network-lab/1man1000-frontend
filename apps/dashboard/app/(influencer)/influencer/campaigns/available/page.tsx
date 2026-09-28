@@ -12,7 +12,7 @@ import {
 } from "@workspace/ui/components/card";
 import { Button } from "@workspace/ui/components/button";
 import { Input } from "@workspace/ui/components/input";
-import { Search, Eye, Calendar, TrendingUp } from "lucide-react";
+import { Search, Eye, Calendar, TrendingUp, Users } from "lucide-react";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { LoadingState } from "@/components/ui/loading-state";
 import { ErrorState } from "@/components/ui/error-state";
@@ -133,6 +133,17 @@ export default function AvailableCampaignsPage() {
                       {new Date(campaign.startDate).toLocaleDateString()} -{" "}
                       {new Date(campaign.endDate).toLocaleDateString()}
                     </p>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                    <Users className="h-4 w-4" />
+                    <span>
+                      {campaign._count?.assignments ?? 0}{" "}
+                      {campaign._count?.assignments === 1
+                        ? "influencer"
+                        : "influencers"}{" "}
+                      participating
+                    </span>
                   </div>
 
                   <div className="flex gap-2 pt-2">

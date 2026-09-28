@@ -35,6 +35,7 @@ import {
   Upload,
   CheckCircle,
   ArrowUpDown,
+  Users,
 } from "lucide-react";
 import { LoadingState } from "@/components/ui/loading-state";
 import { ErrorState } from "@/components/ui/error-state";
@@ -349,9 +350,18 @@ export default function InfluencerCampaignsPage() {
                     </div> */}
 
                     <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-1.5 text-muted-foreground">
-                        <Clock className="h-4 w-4" />
-                        {new Date(campaign.endDate).toLocaleDateString()}
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-1.5 text-muted-foreground">
+                          <Clock className="h-4 w-4" />
+                          {new Date(campaign.endDate).toLocaleDateString()}
+                        </div>
+                        <div className="flex items-center gap-1.5 text-muted-foreground">
+                          <Users className="h-4 w-4" />
+                          {campaign._count?.assignments ?? 0}{" "}
+                          {campaign._count?.assignments === 1
+                            ? "influencer"
+                            : "influencers"}
+                        </div>
                       </div>
                       {(campaign as any).hasSubmitted && (
                         <div className="flex items-center gap-1 text-xs text-emerald-600">

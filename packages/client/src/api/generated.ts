@@ -153,6 +153,7 @@ export interface ProfileResponseDto {
   mobileMoneyNumber?: string;
   mobileMoneyNetwork?: ProfileResponseDtoMobileMoneyNetwork;
   country?: string;
+  city?: string;
   bankName?: string;
   bankAccountNumber?: string;
   occupation?: string;
@@ -276,6 +277,7 @@ export interface UserResponseDto {
   mobileMoneyNumber?: string;
   mobileMoneyNetwork?: UserResponseDtoMobileMoneyNetwork;
   country?: string;
+  city?: string;
   bankName?: string;
   bankAccountNumber?: string;
   occupation?: string;
@@ -358,6 +360,7 @@ export interface UpdateUserDto {
   company?: string;
   phone?: string;
   country?: string;
+  city?: string;
   mobileMoneyNumber?: string;
   mobileMoneyNetwork?: UpdateUserDtoMobileMoneyNetwork;
   bankName?: string;
@@ -448,6 +451,11 @@ export interface InfluencerAssignmentDto {
   influencer?: InfluencerAssignmentDtoInfluencer;
 }
 
+export interface CampaignCountsDto {
+  assignments: number;
+  submissions: number;
+}
+
 /**
  * @nullable
  */
@@ -510,6 +518,7 @@ export interface CampaignResponseDto {
   assignedInfluencers?: InfluencerAssignmentDto[];
   createdAt: string;
   updatedAt: string;
+  _count?: CampaignCountsDto;
 }
 
 export interface PaginationMetaDto {
@@ -524,11 +533,6 @@ export interface PaginationMetaDto {
 export interface CampaignsListResponseDto {
   data: CampaignResponseDto[];
   meta: PaginationMetaDto;
-}
-
-export interface CampaignCountsDto {
-  assignments: number;
-  submissions: number;
 }
 
 /**
@@ -593,7 +597,7 @@ export interface ClientCampaignResponseDto {
   assignedInfluencers?: InfluencerAssignmentDto[];
   createdAt: string;
   updatedAt: string;
-  _count: CampaignCountsDto;
+  _count?: CampaignCountsDto;
 }
 
 export interface DashboardStatsDto {
@@ -713,6 +717,7 @@ export interface InfluencerCampaignResponseDto {
   assignedInfluencers?: InfluencerAssignmentDto[];
   createdAt: string;
   updatedAt: string;
+  _count?: CampaignCountsDto;
   assignedDate?: string;
   assignmentStatus: InfluencerCampaignResponseDtoAssignmentStatus;
   hasSubmitted: boolean;
