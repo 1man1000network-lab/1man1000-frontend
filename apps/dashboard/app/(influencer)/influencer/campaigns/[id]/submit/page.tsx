@@ -4,10 +4,9 @@ import { useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   useCampaignsControllerFindOne,
-  useSubmissionsControllerCreate,
   getSubmissionsControllerGetInfluencerSubmissionsQueryKey,
   getCampaignsControllerGetInfluencerCampaignsQueryKey,
 } from "@workspace/client";
@@ -93,59 +92,45 @@ export default function SubmitCampaignPage() {
     },
   });
 
-  const submitMutation = useSubmissionsControllerCreate({
-    mutation: {
-      onSuccess: async (data: any) => {
-        // After creating submission, upload screenshot if file is selected
-        if (selectedFile && data.id) {
-          try {
-            const formData = new FormData();
-            formData.append("screenshot", selectedFile);
+  const submitMutation = useMutation({
+    mutationFn: async (data: SubmissionFormData) => {
+      const formData = new FormData();
+      formData.append("campaignId", data.campaignId);
+      formData.append("extractedViewCount", String(data.extractedViewCount));
+      formData.append("screenshot", selectedFile!);
 
-            // Upload screenshot using fetch
-            const token = localStorage.getItem("auth-storage");
-            const authData = token ? JSON.parse(token) : null;
-            const accessToken = authData?.state?.token;
+      const token = localStorage.getItem("auth-storage");
+      const authData = token ? JSON.parse(token) : null;
+      const accessToken = authData?.state?.token;
 
-            const response = await fetch(
-              `${process.env.NEXT_PUBLIC_API_URL}/api/submissions/${data.id}/upload-screenshot`,
-              {
-                method: "POST",
-                headers: {
-                  Authorization: `Bearer ${accessToken}`,
-                },
-                body: formData,
-              },
-            );
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/submissions`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: formData,
+        },
+      );
 
-            if (!response.ok) {
-              throw new Error("Failed to upload screenshot");
-            }
+      if (!response.ok) {
+        const errorBody = await response.json().catch(() => null);
+        throw new Error(
+          errorBody?.message || "Failed to submit. Please try again.",
+        );
+      }
 
-            queryClient.invalidateQueries({
-              queryKey:
-                getSubmissionsControllerGetInfluencerSubmissionsQueryKey(),
-            });
-            queryClient.invalidateQueries({
-              queryKey: getCampaignsControllerGetInfluencerCampaignsQueryKey(),
-            });
-            router.push("/influencer/submissions");
-          } catch (error) {
-            console.error("Screenshot upload error:", error);
-            alert("Failed to upload screenshot. Please try again.");
-          }
-        } else {
-          // No file to upload, redirect directly
-          queryClient.invalidateQueries({
-            queryKey:
-              getSubmissionsControllerGetInfluencerSubmissionsQueryKey(),
-          });
-          queryClient.invalidateQueries({
-            queryKey: getCampaignsControllerGetInfluencerCampaignsQueryKey(),
-          });
-          router.push("/influencer/submissions");
-        }
-      },
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: getSubmissionsControllerGetInfluencerSubmissionsQueryKey(),
+      });
+      queryClient.invalidateQueries({
+        queryKey: getCampaignsControllerGetInfluencerCampaignsQueryKey(),
+      });
+      router.push("/influencer/submissions");
     },
   });
 
@@ -154,13 +139,7 @@ export default function SubmitCampaignPage() {
       return;
     }
 
-    // Create submission with JSON data (file will be uploaded separately)
-    submitMutation.mutate({
-      data: {
-        campaignId: data.campaignId,
-        extractedViewCount: data.extractedViewCount,
-      },
-    });
+    submitMutation.mutate(data);
   };
 
   const handleFileSelect = useCallback(
@@ -541,7 +520,9 @@ export default function SubmitCampaignPage() {
         {submitMutation.isError && (
           <div className="rounded-xl bg-destructive/10 border border-destructive/20 p-4 text-center">
             <p className="text-sm text-destructive">
-              Failed to submit. Please check your details and try again.
+              {submitMutation.error instanceof Error
+                ? submitMutation.error.message
+                : "Failed to submit. Please check your details and try again."}
             </p>
           </div>
         )}

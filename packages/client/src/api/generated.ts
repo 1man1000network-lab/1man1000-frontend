@@ -924,14 +924,6 @@ export interface CreateNotificationDto {
   metadata?: CreateNotificationDtoMetadata;
 }
 
-export interface CreateSubmissionDto {
-  campaignId: string;
-  screenshotUrl?: string;
-  extractedViewCount: number;
-  description?: string;
-  feedback?: string;
-}
-
 export interface SubmissionCampaignDto {
   id: string;
   brandName: string;
@@ -1722,6 +1714,14 @@ export type CampaignsControllerRequestParticipation201 = {
   assignedDate?: string;
   campaign?: CampaignsControllerRequestParticipation201Campaign;
   influencer?: CampaignsControllerRequestParticipation201Influencer;
+};
+
+export type SubmissionsControllerCreateBody = {
+  campaignId: string;
+  extractedViewCount: number;
+  description?: string;
+  feedback?: string;
+  screenshot: Blob;
 };
 
 export type SubmissionsControllerFindAllParams = {
@@ -5347,15 +5347,25 @@ export const useNotificationsControllerDelete = <TError = void,
  * @summary Create a new submission
  */
 export const submissionsControllerCreate = (
-    createSubmissionDto: CreateSubmissionDto,
+    submissionsControllerCreateBody: SubmissionsControllerCreateBody,
  signal?: AbortSignal
 ) => {
       
-      
+      const formData = new FormData();
+formData.append(`campaignId`, submissionsControllerCreateBody.campaignId)
+formData.append(`extractedViewCount`, submissionsControllerCreateBody.extractedViewCount.toString())
+if(submissionsControllerCreateBody.description !== undefined) {
+ formData.append(`description`, submissionsControllerCreateBody.description)
+ }
+if(submissionsControllerCreateBody.feedback !== undefined) {
+ formData.append(`feedback`, submissionsControllerCreateBody.feedback)
+ }
+formData.append(`screenshot`, submissionsControllerCreateBody.screenshot)
+
       return axiosInstance<SubmissionResponseDto>(
       {url: `/api/submissions`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: createSubmissionDto, signal
+      headers: {'Content-Type': 'multipart/form-data', },
+       data: formData, signal
     },
       );
     }
@@ -5363,8 +5373,8 @@ export const submissionsControllerCreate = (
 
 
 export const getSubmissionsControllerCreateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submissionsControllerCreate>>, TError,{data: CreateSubmissionDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof submissionsControllerCreate>>, TError,{data: CreateSubmissionDto}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submissionsControllerCreate>>, TError,{data: SubmissionsControllerCreateBody}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof submissionsControllerCreate>>, TError,{data: SubmissionsControllerCreateBody}, TContext> => {
 
 const mutationKey = ['submissionsControllerCreate'];
 const {mutation: mutationOptions} = options ?
@@ -5376,7 +5386,7 @@ const {mutation: mutationOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof submissionsControllerCreate>>, {data: CreateSubmissionDto}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof submissionsControllerCreate>>, {data: SubmissionsControllerCreateBody}> = (props) => {
           const {data} = props ?? {};
 
           return  submissionsControllerCreate(data,)
@@ -5388,18 +5398,18 @@ const {mutation: mutationOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type SubmissionsControllerCreateMutationResult = NonNullable<Awaited<ReturnType<typeof submissionsControllerCreate>>>
-    export type SubmissionsControllerCreateMutationBody = CreateSubmissionDto
+    export type SubmissionsControllerCreateMutationBody = SubmissionsControllerCreateBody
     export type SubmissionsControllerCreateMutationError = unknown
 
     /**
  * @summary Create a new submission
  */
 export const useSubmissionsControllerCreate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submissionsControllerCreate>>, TError,{data: CreateSubmissionDto}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submissionsControllerCreate>>, TError,{data: SubmissionsControllerCreateBody}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof submissionsControllerCreate>>,
         TError,
-        {data: CreateSubmissionDto},
+        {data: SubmissionsControllerCreateBody},
         TContext
       > => {
 
