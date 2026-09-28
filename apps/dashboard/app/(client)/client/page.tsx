@@ -294,14 +294,6 @@ export default function ClientDashboard() {
                     : avgViewsPerSubmission.toLocaleString()}
                 </span>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">
-                  Conversion Rate
-                </span>
-                <span className="text-sm font-medium">
-                  {data.stats.conversionRate}
-                </span>
-              </div>
             </div>
           </CardContent>
         </Card>
