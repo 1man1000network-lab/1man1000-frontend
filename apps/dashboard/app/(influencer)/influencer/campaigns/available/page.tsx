@@ -14,6 +14,7 @@ import { Button } from "@workspace/ui/components/button";
 import { Input } from "@workspace/ui/components/input";
 import { Search, Eye, Calendar, TrendingUp, Users } from "lucide-react";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { ShareCampaignButton } from "@/components/share-campaign-button";
 import { LoadingState } from "@/components/ui/loading-state";
 import { ErrorState } from "@/components/ui/error-state";
 
@@ -160,6 +161,12 @@ export default function AvailableCampaignsPage() {
                         View Details
                       </Link>
                     </Button>
+                    <ShareCampaignButton
+                      campaignId={campaign.id}
+                      campaignTitle={String(
+                        campaign.title ?? campaign.brandName,
+                      )}
+                    />
                   </div>
                 </CardContent>
               </Card>

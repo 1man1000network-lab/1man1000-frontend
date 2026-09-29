@@ -30,6 +30,7 @@ import {
 import { LoadingState } from "@/components/ui/loading-state";
 import { ErrorState } from "@/components/ui/error-state";
 import Link from "next/link";
+import { ShareCampaignButton } from "@/components/share-campaign-button";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -134,41 +135,48 @@ export default function AvailableCampaignDetailPage() {
             </p>
           </div>
         </div>
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button
-              size="lg"
-              disabled={isRequesting || requestMutation.isPending}
-            >
-              {isRequesting || requestMutation.isPending ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Joining...
-                </>
-              ) : (
-                <>
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  Participate
-                </>
-              )}
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Join Campaign</AlertDialogTitle>
-              <AlertDialogDescription>
-                Are you sure you want to participate in this campaign? You will
-                be immediately assigned and can start working on it.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleRequestParticipation}>
-                Join Campaign
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <div className="flex items-center gap-2">
+          <ShareCampaignButton
+            campaignId={campaignId}
+            campaignTitle={campaign.title || campaign.brandName}
+            size="lg"
+          />
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                size="lg"
+                disabled={isRequesting || requestMutation.isPending}
+              >
+                {isRequesting || requestMutation.isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Joining...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    Participate
+                  </>
+                )}
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Join Campaign</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to participate in this campaign? You
+                  will be immediately assigned and can start working on it.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleRequestParticipation}>
+                  Join Campaign
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
       </div>
 
       {requestMutation.isError && (

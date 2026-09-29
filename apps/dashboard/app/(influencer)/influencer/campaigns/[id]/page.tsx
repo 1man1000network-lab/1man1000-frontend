@@ -28,6 +28,7 @@ import {
 import { LoadingState } from "@/components/ui/loading-state";
 import { ErrorState } from "@/components/ui/error-state";
 import Link from "next/link";
+import { ShareCampaignButton } from "@/components/share-campaign-button";
 import VideoPlayerComponent from "@/components/video-player";
 import { downloadCampaignAsset } from "@/lib/services/downloadService";
 import { isCampaignExpired } from "@/lib/campaign-utils";
@@ -113,19 +114,26 @@ export default function CampaignDetailPage() {
             </p>
           </div>
         </div>
-        {isExpired ? (
-          <Button size="lg" disabled variant="secondary">
-            <Clock className="h-4 w-4 mr-2" />
-            Campaign Expired
-          </Button>
-        ) : (
-          <Button size="lg" asChild>
-            <Link href={`/influencer/campaigns/${campaignId}/submit`}>
-              <Upload className="h-4 w-4 mr-2" />
-              Submit Work
-            </Link>
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          <ShareCampaignButton
+            campaignId={campaignId}
+            campaignTitle={campaign.title || campaign.brandName}
+            size="lg"
+          />
+          {isExpired ? (
+            <Button size="lg" disabled variant="secondary">
+              <Clock className="h-4 w-4 mr-2" />
+              Campaign Expired
+            </Button>
+          ) : (
+            <Button size="lg" asChild>
+              <Link href={`/influencer/campaigns/${campaignId}/submit`}>
+                <Upload className="h-4 w-4 mr-2" />
+                Submit Work
+              </Link>
+            </Button>
+          )}
+        </div>
       </div>
 
       <Card>
