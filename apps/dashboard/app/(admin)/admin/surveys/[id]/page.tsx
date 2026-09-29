@@ -1,9 +1,11 @@
 "use client";
 
 import { useParams } from "next/navigation";
+import { useState } from "react";
 import {
   useSurveysControllerFindOne,
   useSurveysControllerUpdateStatus,
+  useSurveysControllerUpdatePayment,
   UpdateSurveyStatusDtoStatus,
 } from "@workspace/client";
 import {
@@ -21,7 +23,18 @@ import {
   BarChart3,
   CheckCircle,
   XCircle,
+  Pencil,
 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@workspace/ui/components/dialog";
+import { Input } from "@workspace/ui/components/input";
+import { Label } from "@workspace/ui/components/label";
 import { LoadingState } from "@/components/ui/loading-state";
 import { ErrorState } from "@/components/ui/error-state";
 import Link from "next/link";
@@ -84,6 +97,38 @@ export default function AdminSurveyDetailPage() {
       },
     },
   });
+
+  const updatePaymentMutation = useSurveysControllerUpdatePayment();
+  const [priceOpen, setPriceOpen] = useState(false);
+  const [priceValue, setPriceValue] = useState("");
+  const [priceError, setPriceError] = useState("");
+
+  const openPriceDialog = () => {
+    setPriceValue((survey?.paymentPerResponse ?? 0).toString());
+    setPriceError("");
+    setPriceOpen(true);
+  };
+
+  const handleSavePrice = async () => {
+    const amount = parseFloat(priceValue);
+    if (isNaN(amount) || amount < 0) {
+      setPriceError("Enter a valid amount");
+      return;
+    }
+    try {
+      await updatePaymentMutation.mutateAsync({
+        id: surveyId,
+        data: { paymentPerResponse: amount },
+      });
+      setPriceOpen(false);
+      setPriceError("");
+      refetch();
+    } catch (error: any) {
+      setPriceError(
+        error?.response?.data?.message || "Failed to update payment price",
+      );
+    }
+  };
 
   const handleApprove = async () => {
     if (window.confirm("Are you sure you want to approve this survey?")) {
@@ -234,10 +279,18 @@ export default function AdminSurveyDetailPage() {
         </Card>
 
         <Card>
-          <CardHeader className="pb-2">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Payment Per Response
             </CardTitle>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={openPriceDialog}
+            >
+              <Pencil className="h-3.5 w-3.5" />
+            </Button>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
@@ -355,6 +408,49 @@ export default function AdminSurveyDetailPage() {
           </CardContent>
         </Card>
       )}
+
+      <Dialog open={priceOpen} onOpenChange={setPriceOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Set payment price</DialogTitle>
+            <DialogDescription>
+              Amount paid to an influencer per completed response for &quot;
+              {survey.title}&quot;.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="payment-per-response">
+              Payment per response (GH₵)
+            </Label>
+            <Input
+              id="payment-per-response"
+              type="number"
+              min="0"
+              step="0.01"
+              value={priceValue}
+              onChange={(e) => setPriceValue(e.target.value)}
+            />
+            {priceError && (
+              <p className="text-sm text-destructive">{priceError}</p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              disabled={updatePaymentMutation.isPending}
+              onClick={() => setPriceOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSavePrice}
+              disabled={updatePaymentMutation.isPending}
+            >
+              {updatePaymentMutation.isPending ? "Saving..." : "Save"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

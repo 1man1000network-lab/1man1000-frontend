@@ -1321,6 +1321,10 @@ export interface UpdateSurveyStatusDto {
   status: UpdateSurveyStatusDtoStatus;
 }
 
+export interface UpdateSurveyPaymentDto {
+  paymentPerResponse: number;
+}
+
 /**
  * Survey answers mapped by question ID
  */
@@ -7896,6 +7900,71 @@ export const useSurveysControllerUpdateStatus = <TError = unknown,
       > => {
 
       const mutationOptions = getSurveysControllerUpdateStatusMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Set survey payment price (Admin only)
+ */
+export const surveysControllerUpdatePayment = (
+    id: string,
+    updateSurveyPaymentDto: UpdateSurveyPaymentDto,
+ ) => {
+      
+      
+      return axiosInstance<void>(
+      {url: `/api/surveys/${id}/payment`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateSurveyPaymentDto
+    },
+      );
+    }
+  
+
+
+export const getSurveysControllerUpdatePaymentMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof surveysControllerUpdatePayment>>, TError,{id: string;data: UpdateSurveyPaymentDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof surveysControllerUpdatePayment>>, TError,{id: string;data: UpdateSurveyPaymentDto}, TContext> => {
+
+const mutationKey = ['surveysControllerUpdatePayment'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof surveysControllerUpdatePayment>>, {id: string;data: UpdateSurveyPaymentDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  surveysControllerUpdatePayment(id,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SurveysControllerUpdatePaymentMutationResult = NonNullable<Awaited<ReturnType<typeof surveysControllerUpdatePayment>>>
+    export type SurveysControllerUpdatePaymentMutationBody = UpdateSurveyPaymentDto
+    export type SurveysControllerUpdatePaymentMutationError = void
+
+    /**
+ * @summary Set survey payment price (Admin only)
+ */
+export const useSurveysControllerUpdatePayment = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof surveysControllerUpdatePayment>>, TError,{id: string;data: UpdateSurveyPaymentDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof surveysControllerUpdatePayment>>,
+        TError,
+        {id: string;data: UpdateSurveyPaymentDto},
+        TContext
+      > => {
+
+      const mutationOptions = getSurveysControllerUpdatePaymentMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }
