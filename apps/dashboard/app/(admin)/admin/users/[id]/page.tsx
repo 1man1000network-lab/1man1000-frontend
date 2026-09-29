@@ -6,6 +6,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   useUsersControllerFindOne,
   useUsersControllerUpdateStatus,
+  useUsersControllerFlagUser,
+  useUsersControllerUnflagUser,
   useAdminControllerGetInfluencerOverview,
   getUsersControllerFindAllQueryKey,
   getUsersControllerFindOneQueryKey,
@@ -20,6 +22,8 @@ import {
 } from "@workspace/ui/components/card";
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
+import { Label } from "@workspace/ui/components/label";
+import { Textarea } from "@workspace/ui/components/textarea";
 import { Separator } from "@workspace/ui/components/separator";
 import {
   ArrowLeft,
@@ -38,10 +42,15 @@ import {
   Megaphone,
   FileImage,
   ClipboardList,
+  Flag,
+  FlagOff,
+  Loader2,
 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@workspace/ui/components/dialog";
@@ -141,6 +150,9 @@ export default function AdminUserDetailPage() {
   const [campaignsLimit, setCampaignsLimit] = useState(5);
   const [paymentsPage, setPaymentsPage] = useState(1);
   const [paymentsLimit, setPaymentsLimit] = useState(5);
+  const [flagDialogOpen, setFlagDialogOpen] = useState(false);
+  const [flagReason, setFlagReason] = useState("");
+  const [flagError, setFlagError] = useState<string | null>(null);
   const updateStatusMutation = useUsersControllerUpdateStatus({
     mutation: {
       onSuccess: () => {
@@ -180,6 +192,49 @@ export default function AdminUserDetailPage() {
       id: userId,
       data: { status: UpdateUserStatusDtoStatus.approved },
     });
+  };
+
+  const invalidateUser = () => {
+    queryClient.invalidateQueries({
+      queryKey: getUsersControllerFindOneQueryKey(userId),
+    });
+    queryClient.invalidateQueries({
+      queryKey: getUsersControllerFindAllQueryKey(),
+    });
+  };
+
+  const flagMutation = useUsersControllerFlagUser({
+    mutation: {
+      onSuccess: () => {
+        invalidateUser();
+        setFlagDialogOpen(false);
+        setFlagReason("");
+        setFlagError(null);
+      },
+      onError: (error) => {
+        setFlagError(
+          (error as unknown as { response?: { data?: { message?: string } } })
+            ?.response?.data?.message || "Failed to flag user",
+        );
+      },
+    },
+  });
+
+  const unflagMutation = useUsersControllerUnflagUser({
+    mutation: {
+      onSuccess: () => {
+        invalidateUser();
+      },
+    },
+  });
+
+  const confirmFlag = () => {
+    const reason = flagReason.trim();
+    if (!reason) {
+      setFlagError("A reason is required to flag this account");
+      return;
+    }
+    flagMutation.mutate({ id: userId, data: { reason } });
   };
 
   if (isLoading) return <LoadingState text="Loading user details..." />;
@@ -236,6 +291,16 @@ export default function AdminUserDetailPage() {
                 {user.role}
               </Badge>
               <StatusBadge status={user.status} />
+              {user.isFlagged && (
+                <Badge
+                  variant="outline"
+                  className="border-amber-500/60 bg-amber-500/10 text-amber-600"
+                  title={user.flagReason ?? "Flagged"}
+                >
+                  <Flag className="mr-1 h-3 w-3" />
+                  Flagged
+                </Badge>
+              )}
             </div>
             <p className="text-muted-foreground">{user.email}</p>
           </div>
@@ -285,6 +350,33 @@ export default function AdminUserDetailPage() {
               Unsuspend
             </Button>
           )}
+
+          {isInfluencer &&
+            (user.isFlagged ? (
+              <Button
+                variant="outline"
+                className="text-emerald-600 border-emerald-600 hover:bg-emerald-50"
+                onClick={() => unflagMutation.mutate({ id: userId })}
+                disabled={unflagMutation.isPending}
+              >
+                <FlagOff className="h-4 w-4 mr-2" />
+                Remove Flag
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                className="text-amber-600 border-amber-600 hover:bg-amber-50"
+                onClick={() => {
+                  setFlagReason("");
+                  setFlagError(null);
+                  setFlagDialogOpen(true);
+                }}
+                disabled={flagMutation.isPending}
+              >
+                <Flag className="h-4 w-4 mr-2" />
+                Flag Account
+              </Button>
+            ))}
         </div>
       </div>
 
@@ -394,6 +486,17 @@ export default function AdminUserDetailPage() {
             <FieldRow label="Phone" value={user.phone || undefined} />
             <Separator />
             <FieldRow label="Status" value={user.status} />
+            <FieldRow
+              label="Flagged"
+              value={
+                user.isFlagged
+                  ? `Yes${user.flaggedAt ? ` — ${new Date(user.flaggedAt).toLocaleDateString()}` : ""}`
+                  : "No"
+              }
+            />
+            {user.isFlagged && (
+              <FieldRow label="Flag Reason" value={user.flagReason ?? undefined} />
+            )}
             <FieldRow
               label="Profile Completed"
               value={String(!!user.profileCompleted)}
@@ -755,6 +858,68 @@ export default function AdminUserDetailPage() {
               className="max-h-[75vh] w-auto max-w-full mx-auto rounded-lg object-contain"
             />
           )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={flagDialogOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            setFlagDialogOpen(false);
+            setFlagReason("");
+            setFlagError(null);
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Flag Account</DialogTitle>
+            <DialogDescription>
+              Flag {user.name || user.email} for review. The influencer will be
+              notified with the reason you provide.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 py-2">
+            <Label htmlFor="flag-reason">Reason for flagging *</Label>
+            <Textarea
+              id="flag-reason"
+              placeholder="e.g., Submitted fake views, multiple fake accounts, spam submissions..."
+              value={flagReason}
+              onChange={(e) => {
+                setFlagReason(e.target.value);
+                setFlagError(null);
+              }}
+              rows={3}
+            />
+            {flagError && (
+              <p className="text-sm text-destructive">{flagError}</p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setFlagDialogOpen(false);
+                setFlagReason("");
+                setFlagError(null);
+              }}
+              disabled={flagMutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmFlag}
+              disabled={flagMutation.isPending}
+            >
+              {flagMutation.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Flag className="mr-2 h-4 w-4" />
+              )}
+              Flag Account
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

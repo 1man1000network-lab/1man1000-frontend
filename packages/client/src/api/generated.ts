@@ -73,6 +73,11 @@ export interface AuthUserDto {
   company?: string;
   phone?: string;
   profileCompleted: boolean;
+  isFlagged?: boolean;
+  /** @nullable */
+  flagReason?: string | null;
+  /** @nullable */
+  flaggedAt?: string | null;
 }
 
 export interface LoginResponseDto {
@@ -150,6 +155,11 @@ export interface ProfileResponseDto {
   company?: string;
   phone?: string;
   profileCompleted: boolean;
+  isFlagged?: boolean;
+  /** @nullable */
+  flagReason?: string | null;
+  /** @nullable */
+  flaggedAt?: string | null;
   mobileMoneyNumber?: string;
   mobileMoneyNetwork?: ProfileResponseDtoMobileMoneyNetwork;
   country?: string;
@@ -286,6 +296,11 @@ export interface UserResponseDto {
   gender?: UserResponseDtoGender;
   ageBracket?: UserResponseDtoAgeBracket;
   profileCompleted: boolean;
+  isFlagged: boolean;
+  /** @nullable */
+  flagReason?: string | null;
+  /** @nullable */
+  flaggedAt?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -387,9 +402,24 @@ export interface UpdateUserStatusDto {
   status?: UpdateUserStatusDtoStatus;
 }
 
+export interface FlagUserDto {
+  reason: string;
+}
+
 export interface ChangePasswordDto {
   currentPassword: string;
   newPassword: string;
+}
+
+export type CreateNotificationDtoMetadata = { [key: string]: unknown };
+
+export interface CreateNotificationDto {
+  userId: string;
+  type: string;
+  title: string;
+  message: string;
+  link?: string;
+  metadata?: CreateNotificationDtoMetadata;
 }
 
 export interface TargetViewRangeDto {
@@ -927,17 +957,6 @@ export interface BulkAssignInfluencersDto {
   isStudent?: boolean;
   /** If provided, assign only student influencers from these schools */
   schools?: string[];
-}
-
-export type CreateNotificationDtoMetadata = { [key: string]: unknown };
-
-export interface CreateNotificationDto {
-  userId: string;
-  type: string;
-  title: string;
-  message: string;
-  link?: string;
-  metadata?: CreateNotificationDtoMetadata;
 }
 
 export interface SubmissionCampaignDto {
@@ -3639,6 +3658,133 @@ export const useUsersControllerUpdateStatus = <TError = void,
     }
     
 /**
+ * @summary Flag an influencer account (Admin only)
+ */
+export const usersControllerFlagUser = (
+    id: string,
+    flagUserDto: FlagUserDto,
+ ) => {
+      
+      
+      return axiosInstance<UserResponseDto>(
+      {url: `/api/users/${id}/flag`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: flagUserDto
+    },
+      );
+    }
+  
+
+
+export const getUsersControllerFlagUserMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersControllerFlagUser>>, TError,{id: string;data: FlagUserDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof usersControllerFlagUser>>, TError,{id: string;data: FlagUserDto}, TContext> => {
+
+const mutationKey = ['usersControllerFlagUser'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof usersControllerFlagUser>>, {id: string;data: FlagUserDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  usersControllerFlagUser(id,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UsersControllerFlagUserMutationResult = NonNullable<Awaited<ReturnType<typeof usersControllerFlagUser>>>
+    export type UsersControllerFlagUserMutationBody = FlagUserDto
+    export type UsersControllerFlagUserMutationError = void
+
+    /**
+ * @summary Flag an influencer account (Admin only)
+ */
+export const useUsersControllerFlagUser = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersControllerFlagUser>>, TError,{id: string;data: FlagUserDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof usersControllerFlagUser>>,
+        TError,
+        {id: string;data: FlagUserDto},
+        TContext
+      > => {
+
+      const mutationOptions = getUsersControllerFlagUserMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Remove flag from an account (Admin only)
+ */
+export const usersControllerUnflagUser = (
+    id: string,
+ ) => {
+      
+      
+      return axiosInstance<UserResponseDto>(
+      {url: `/api/users/${id}/unflag`, method: 'PATCH'
+    },
+      );
+    }
+  
+
+
+export const getUsersControllerUnflagUserMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersControllerUnflagUser>>, TError,{id: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof usersControllerUnflagUser>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['usersControllerUnflagUser'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof usersControllerUnflagUser>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  usersControllerUnflagUser(id,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UsersControllerUnflagUserMutationResult = NonNullable<Awaited<ReturnType<typeof usersControllerUnflagUser>>>
+    
+    export type UsersControllerUnflagUserMutationError = void
+
+    /**
+ * @summary Remove flag from an account (Admin only)
+ */
+export const useUsersControllerUnflagUser = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersControllerUnflagUser>>, TError,{id: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof usersControllerUnflagUser>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getUsersControllerUnflagUserMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
  * @summary Change current user password
  */
 export const usersControllerChangePassword = (
@@ -3698,6 +3844,443 @@ export const useUsersControllerChangePassword = <TError = void,
       > => {
 
       const mutationOptions = getUsersControllerChangePasswordMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Create a notification (Admin only)
+ */
+export const notificationsControllerCreate = (
+    createNotificationDto: CreateNotificationDto,
+ signal?: AbortSignal
+) => {
+      
+      
+      return axiosInstance<void>(
+      {url: `/api/notifications`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createNotificationDto, signal
+    },
+      );
+    }
+  
+
+
+export const getNotificationsControllerCreateMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof notificationsControllerCreate>>, TError,{data: CreateNotificationDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof notificationsControllerCreate>>, TError,{data: CreateNotificationDto}, TContext> => {
+
+const mutationKey = ['notificationsControllerCreate'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof notificationsControllerCreate>>, {data: CreateNotificationDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  notificationsControllerCreate(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type NotificationsControllerCreateMutationResult = NonNullable<Awaited<ReturnType<typeof notificationsControllerCreate>>>
+    export type NotificationsControllerCreateMutationBody = CreateNotificationDto
+    export type NotificationsControllerCreateMutationError = unknown
+
+    /**
+ * @summary Create a notification (Admin only)
+ */
+export const useNotificationsControllerCreate = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof notificationsControllerCreate>>, TError,{data: CreateNotificationDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof notificationsControllerCreate>>,
+        TError,
+        {data: CreateNotificationDto},
+        TContext
+      > => {
+
+      const mutationOptions = getNotificationsControllerCreateMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Get current user notifications
+ */
+export const notificationsControllerFindAll = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return axiosInstance<void>(
+      {url: `/api/notifications`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getNotificationsControllerFindAllQueryKey = () => {
+    return [
+    `/api/notifications`
+    ] as const;
+    }
+
+    
+export const getNotificationsControllerFindAllQueryOptions = <TData = Awaited<ReturnType<typeof notificationsControllerFindAll>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof notificationsControllerFindAll>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getNotificationsControllerFindAllQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof notificationsControllerFindAll>>> = ({ signal }) => notificationsControllerFindAll(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof notificationsControllerFindAll>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type NotificationsControllerFindAllQueryResult = NonNullable<Awaited<ReturnType<typeof notificationsControllerFindAll>>>
+export type NotificationsControllerFindAllQueryError = unknown
+
+
+export function useNotificationsControllerFindAll<TData = Awaited<ReturnType<typeof notificationsControllerFindAll>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof notificationsControllerFindAll>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof notificationsControllerFindAll>>,
+          TError,
+          Awaited<ReturnType<typeof notificationsControllerFindAll>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useNotificationsControllerFindAll<TData = Awaited<ReturnType<typeof notificationsControllerFindAll>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof notificationsControllerFindAll>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof notificationsControllerFindAll>>,
+          TError,
+          Awaited<ReturnType<typeof notificationsControllerFindAll>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useNotificationsControllerFindAll<TData = Awaited<ReturnType<typeof notificationsControllerFindAll>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof notificationsControllerFindAll>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get current user notifications
+ */
+
+export function useNotificationsControllerFindAll<TData = Awaited<ReturnType<typeof notificationsControllerFindAll>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof notificationsControllerFindAll>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getNotificationsControllerFindAllQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * @summary Get unread notifications count
+ */
+export const notificationsControllerGetUnreadCount = (
+    
+ signal?: AbortSignal
+) => {
+      
+      
+      return axiosInstance<void>(
+      {url: `/api/notifications/unread-count`, method: 'GET', signal
+    },
+      );
+    }
+  
+
+
+
+export const getNotificationsControllerGetUnreadCountQueryKey = () => {
+    return [
+    `/api/notifications/unread-count`
+    ] as const;
+    }
+
+    
+export const getNotificationsControllerGetUnreadCountQueryOptions = <TData = Awaited<ReturnType<typeof notificationsControllerGetUnreadCount>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof notificationsControllerGetUnreadCount>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getNotificationsControllerGetUnreadCountQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof notificationsControllerGetUnreadCount>>> = ({ signal }) => notificationsControllerGetUnreadCount(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof notificationsControllerGetUnreadCount>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type NotificationsControllerGetUnreadCountQueryResult = NonNullable<Awaited<ReturnType<typeof notificationsControllerGetUnreadCount>>>
+export type NotificationsControllerGetUnreadCountQueryError = unknown
+
+
+export function useNotificationsControllerGetUnreadCount<TData = Awaited<ReturnType<typeof notificationsControllerGetUnreadCount>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof notificationsControllerGetUnreadCount>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof notificationsControllerGetUnreadCount>>,
+          TError,
+          Awaited<ReturnType<typeof notificationsControllerGetUnreadCount>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useNotificationsControllerGetUnreadCount<TData = Awaited<ReturnType<typeof notificationsControllerGetUnreadCount>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof notificationsControllerGetUnreadCount>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof notificationsControllerGetUnreadCount>>,
+          TError,
+          Awaited<ReturnType<typeof notificationsControllerGetUnreadCount>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useNotificationsControllerGetUnreadCount<TData = Awaited<ReturnType<typeof notificationsControllerGetUnreadCount>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof notificationsControllerGetUnreadCount>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get unread notifications count
+ */
+
+export function useNotificationsControllerGetUnreadCount<TData = Awaited<ReturnType<typeof notificationsControllerGetUnreadCount>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof notificationsControllerGetUnreadCount>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getNotificationsControllerGetUnreadCountQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * @summary Mark notification as read
+ */
+export const notificationsControllerMarkAsRead = (
+    id: string,
+ ) => {
+      
+      
+      return axiosInstance<void>(
+      {url: `/api/notifications/${id}/read`, method: 'PATCH'
+    },
+      );
+    }
+  
+
+
+export const getNotificationsControllerMarkAsReadMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof notificationsControllerMarkAsRead>>, TError,{id: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof notificationsControllerMarkAsRead>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['notificationsControllerMarkAsRead'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof notificationsControllerMarkAsRead>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  notificationsControllerMarkAsRead(id,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type NotificationsControllerMarkAsReadMutationResult = NonNullable<Awaited<ReturnType<typeof notificationsControllerMarkAsRead>>>
+    
+    export type NotificationsControllerMarkAsReadMutationError = void
+
+    /**
+ * @summary Mark notification as read
+ */
+export const useNotificationsControllerMarkAsRead = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof notificationsControllerMarkAsRead>>, TError,{id: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof notificationsControllerMarkAsRead>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getNotificationsControllerMarkAsReadMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Mark all notifications as read
+ */
+export const notificationsControllerMarkAllAsRead = (
+    
+ ) => {
+      
+      
+      return axiosInstance<void>(
+      {url: `/api/notifications/read-all`, method: 'PATCH'
+    },
+      );
+    }
+  
+
+
+export const getNotificationsControllerMarkAllAsReadMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof notificationsControllerMarkAllAsRead>>, TError,void, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof notificationsControllerMarkAllAsRead>>, TError,void, TContext> => {
+
+const mutationKey = ['notificationsControllerMarkAllAsRead'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof notificationsControllerMarkAllAsRead>>, void> = () => {
+          
+
+          return  notificationsControllerMarkAllAsRead()
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type NotificationsControllerMarkAllAsReadMutationResult = NonNullable<Awaited<ReturnType<typeof notificationsControllerMarkAllAsRead>>>
+    
+    export type NotificationsControllerMarkAllAsReadMutationError = unknown
+
+    /**
+ * @summary Mark all notifications as read
+ */
+export const useNotificationsControllerMarkAllAsRead = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof notificationsControllerMarkAllAsRead>>, TError,void, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof notificationsControllerMarkAllAsRead>>,
+        TError,
+        void,
+        TContext
+      > => {
+
+      const mutationOptions = getNotificationsControllerMarkAllAsReadMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Delete notification
+ */
+export const notificationsControllerDelete = (
+    id: string,
+ ) => {
+      
+      
+      return axiosInstance<void>(
+      {url: `/api/notifications/${id}`, method: 'DELETE'
+    },
+      );
+    }
+  
+
+
+export const getNotificationsControllerDeleteMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof notificationsControllerDelete>>, TError,{id: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof notificationsControllerDelete>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['notificationsControllerDelete'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof notificationsControllerDelete>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  notificationsControllerDelete(id,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type NotificationsControllerDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof notificationsControllerDelete>>>
+    
+    export type NotificationsControllerDeleteMutationError = void
+
+    /**
+ * @summary Delete notification
+ */
+export const useNotificationsControllerDelete = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof notificationsControllerDelete>>, TError,{id: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof notificationsControllerDelete>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getNotificationsControllerDeleteMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }
@@ -4929,443 +5512,6 @@ export const useCampaignsControllerBulkAssignInfluencers = <TError = void,
       > => {
 
       const mutationOptions = getCampaignsControllerBulkAssignInfluencersMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    
-/**
- * @summary Create a notification (Admin only)
- */
-export const notificationsControllerCreate = (
-    createNotificationDto: CreateNotificationDto,
- signal?: AbortSignal
-) => {
-      
-      
-      return axiosInstance<void>(
-      {url: `/api/notifications`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: createNotificationDto, signal
-    },
-      );
-    }
-  
-
-
-export const getNotificationsControllerCreateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof notificationsControllerCreate>>, TError,{data: CreateNotificationDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof notificationsControllerCreate>>, TError,{data: CreateNotificationDto}, TContext> => {
-
-const mutationKey = ['notificationsControllerCreate'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof notificationsControllerCreate>>, {data: CreateNotificationDto}> = (props) => {
-          const {data} = props ?? {};
-
-          return  notificationsControllerCreate(data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type NotificationsControllerCreateMutationResult = NonNullable<Awaited<ReturnType<typeof notificationsControllerCreate>>>
-    export type NotificationsControllerCreateMutationBody = CreateNotificationDto
-    export type NotificationsControllerCreateMutationError = unknown
-
-    /**
- * @summary Create a notification (Admin only)
- */
-export const useNotificationsControllerCreate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof notificationsControllerCreate>>, TError,{data: CreateNotificationDto}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof notificationsControllerCreate>>,
-        TError,
-        {data: CreateNotificationDto},
-        TContext
-      > => {
-
-      const mutationOptions = getNotificationsControllerCreateMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    
-/**
- * @summary Get current user notifications
- */
-export const notificationsControllerFindAll = (
-    
- signal?: AbortSignal
-) => {
-      
-      
-      return axiosInstance<void>(
-      {url: `/api/notifications`, method: 'GET', signal
-    },
-      );
-    }
-  
-
-
-
-export const getNotificationsControllerFindAllQueryKey = () => {
-    return [
-    `/api/notifications`
-    ] as const;
-    }
-
-    
-export const getNotificationsControllerFindAllQueryOptions = <TData = Awaited<ReturnType<typeof notificationsControllerFindAll>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof notificationsControllerFindAll>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getNotificationsControllerFindAllQueryKey();
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof notificationsControllerFindAll>>> = ({ signal }) => notificationsControllerFindAll(signal);
-
-      
-
-      
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof notificationsControllerFindAll>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type NotificationsControllerFindAllQueryResult = NonNullable<Awaited<ReturnType<typeof notificationsControllerFindAll>>>
-export type NotificationsControllerFindAllQueryError = unknown
-
-
-export function useNotificationsControllerFindAll<TData = Awaited<ReturnType<typeof notificationsControllerFindAll>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof notificationsControllerFindAll>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof notificationsControllerFindAll>>,
-          TError,
-          Awaited<ReturnType<typeof notificationsControllerFindAll>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useNotificationsControllerFindAll<TData = Awaited<ReturnType<typeof notificationsControllerFindAll>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof notificationsControllerFindAll>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof notificationsControllerFindAll>>,
-          TError,
-          Awaited<ReturnType<typeof notificationsControllerFindAll>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useNotificationsControllerFindAll<TData = Awaited<ReturnType<typeof notificationsControllerFindAll>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof notificationsControllerFindAll>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get current user notifications
- */
-
-export function useNotificationsControllerFindAll<TData = Awaited<ReturnType<typeof notificationsControllerFindAll>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof notificationsControllerFindAll>>, TError, TData>>, }
- , queryClient?: QueryClient 
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getNotificationsControllerFindAllQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-
-/**
- * @summary Get unread notifications count
- */
-export const notificationsControllerGetUnreadCount = (
-    
- signal?: AbortSignal
-) => {
-      
-      
-      return axiosInstance<void>(
-      {url: `/api/notifications/unread-count`, method: 'GET', signal
-    },
-      );
-    }
-  
-
-
-
-export const getNotificationsControllerGetUnreadCountQueryKey = () => {
-    return [
-    `/api/notifications/unread-count`
-    ] as const;
-    }
-
-    
-export const getNotificationsControllerGetUnreadCountQueryOptions = <TData = Awaited<ReturnType<typeof notificationsControllerGetUnreadCount>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof notificationsControllerGetUnreadCount>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getNotificationsControllerGetUnreadCountQueryKey();
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof notificationsControllerGetUnreadCount>>> = ({ signal }) => notificationsControllerGetUnreadCount(signal);
-
-      
-
-      
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof notificationsControllerGetUnreadCount>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type NotificationsControllerGetUnreadCountQueryResult = NonNullable<Awaited<ReturnType<typeof notificationsControllerGetUnreadCount>>>
-export type NotificationsControllerGetUnreadCountQueryError = unknown
-
-
-export function useNotificationsControllerGetUnreadCount<TData = Awaited<ReturnType<typeof notificationsControllerGetUnreadCount>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof notificationsControllerGetUnreadCount>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof notificationsControllerGetUnreadCount>>,
-          TError,
-          Awaited<ReturnType<typeof notificationsControllerGetUnreadCount>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useNotificationsControllerGetUnreadCount<TData = Awaited<ReturnType<typeof notificationsControllerGetUnreadCount>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof notificationsControllerGetUnreadCount>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof notificationsControllerGetUnreadCount>>,
-          TError,
-          Awaited<ReturnType<typeof notificationsControllerGetUnreadCount>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useNotificationsControllerGetUnreadCount<TData = Awaited<ReturnType<typeof notificationsControllerGetUnreadCount>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof notificationsControllerGetUnreadCount>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get unread notifications count
- */
-
-export function useNotificationsControllerGetUnreadCount<TData = Awaited<ReturnType<typeof notificationsControllerGetUnreadCount>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof notificationsControllerGetUnreadCount>>, TError, TData>>, }
- , queryClient?: QueryClient 
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getNotificationsControllerGetUnreadCountQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-
-/**
- * @summary Mark notification as read
- */
-export const notificationsControllerMarkAsRead = (
-    id: string,
- ) => {
-      
-      
-      return axiosInstance<void>(
-      {url: `/api/notifications/${id}/read`, method: 'PATCH'
-    },
-      );
-    }
-  
-
-
-export const getNotificationsControllerMarkAsReadMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof notificationsControllerMarkAsRead>>, TError,{id: string}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof notificationsControllerMarkAsRead>>, TError,{id: string}, TContext> => {
-
-const mutationKey = ['notificationsControllerMarkAsRead'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof notificationsControllerMarkAsRead>>, {id: string}> = (props) => {
-          const {id} = props ?? {};
-
-          return  notificationsControllerMarkAsRead(id,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type NotificationsControllerMarkAsReadMutationResult = NonNullable<Awaited<ReturnType<typeof notificationsControllerMarkAsRead>>>
-    
-    export type NotificationsControllerMarkAsReadMutationError = void
-
-    /**
- * @summary Mark notification as read
- */
-export const useNotificationsControllerMarkAsRead = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof notificationsControllerMarkAsRead>>, TError,{id: string}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof notificationsControllerMarkAsRead>>,
-        TError,
-        {id: string},
-        TContext
-      > => {
-
-      const mutationOptions = getNotificationsControllerMarkAsReadMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    
-/**
- * @summary Mark all notifications as read
- */
-export const notificationsControllerMarkAllAsRead = (
-    
- ) => {
-      
-      
-      return axiosInstance<void>(
-      {url: `/api/notifications/read-all`, method: 'PATCH'
-    },
-      );
-    }
-  
-
-
-export const getNotificationsControllerMarkAllAsReadMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof notificationsControllerMarkAllAsRead>>, TError,void, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof notificationsControllerMarkAllAsRead>>, TError,void, TContext> => {
-
-const mutationKey = ['notificationsControllerMarkAllAsRead'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof notificationsControllerMarkAllAsRead>>, void> = () => {
-          
-
-          return  notificationsControllerMarkAllAsRead()
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type NotificationsControllerMarkAllAsReadMutationResult = NonNullable<Awaited<ReturnType<typeof notificationsControllerMarkAllAsRead>>>
-    
-    export type NotificationsControllerMarkAllAsReadMutationError = unknown
-
-    /**
- * @summary Mark all notifications as read
- */
-export const useNotificationsControllerMarkAllAsRead = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof notificationsControllerMarkAllAsRead>>, TError,void, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof notificationsControllerMarkAllAsRead>>,
-        TError,
-        void,
-        TContext
-      > => {
-
-      const mutationOptions = getNotificationsControllerMarkAllAsReadMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    
-/**
- * @summary Delete notification
- */
-export const notificationsControllerDelete = (
-    id: string,
- ) => {
-      
-      
-      return axiosInstance<void>(
-      {url: `/api/notifications/${id}`, method: 'DELETE'
-    },
-      );
-    }
-  
-
-
-export const getNotificationsControllerDeleteMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof notificationsControllerDelete>>, TError,{id: string}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof notificationsControllerDelete>>, TError,{id: string}, TContext> => {
-
-const mutationKey = ['notificationsControllerDelete'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof notificationsControllerDelete>>, {id: string}> = (props) => {
-          const {id} = props ?? {};
-
-          return  notificationsControllerDelete(id,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type NotificationsControllerDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof notificationsControllerDelete>>>
-    
-    export type NotificationsControllerDeleteMutationError = void
-
-    /**
- * @summary Delete notification
- */
-export const useNotificationsControllerDelete = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof notificationsControllerDelete>>, TError,{id: string}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof notificationsControllerDelete>>,
-        TError,
-        {id: string},
-        TContext
-      > => {
-
-      const mutationOptions = getNotificationsControllerDeleteMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

@@ -7,6 +7,8 @@ import {
   useUsersControllerUpdateStatus,
   useUsersControllerDelete,
   useUsersControllerGetAdminStats,
+  useUsersControllerFlagUser,
+  useUsersControllerUnflagUser,
   getUsersControllerFindAllQueryKey,
   UpdateUserStatusDtoStatus,
   usersControllerExportUsersToCsv,
@@ -21,6 +23,16 @@ import {
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
 import { Input } from "@workspace/ui/components/input";
+import { Label } from "@workspace/ui/components/label";
+import { Textarea } from "@workspace/ui/components/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@workspace/ui/components/dialog";
 import {
   Avatar,
   AvatarFallback,
@@ -49,6 +61,8 @@ import {
   Trash2,
   Loader2,
   Download,
+  Flag,
+  FlagOff,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -74,6 +88,9 @@ type User = {
   status: string;
   avatarUrl?: string;
   createdAt: string;
+  isFlagged?: boolean;
+  flagReason?: string | null;
+  flaggedAt?: string | null;
 };
 
 function UserListItem({
@@ -83,8 +100,11 @@ function UserListItem({
   onReject,
   onSuspend,
   onUnsuspend,
+  onFlag,
+  onUnflag,
   isStatusPending,
   isDeletePending,
+  isFlagPending,
 }: {
   item: User;
   onDelete: (user: User) => void;
@@ -92,8 +112,11 @@ function UserListItem({
   onReject: (id: string) => void;
   onSuspend: (id: string) => void;
   onUnsuspend: (id: string) => void;
+  onFlag: (user: User) => void;
+  onUnflag: (id: string) => void;
   isStatusPending: boolean;
   isDeletePending: boolean;
+  isFlagPending: boolean;
 }) {
   return (
     <div className="flex items-center justify-between p-4">
@@ -116,6 +139,16 @@ function UserListItem({
           {user.role}
         </Badge>
         <StatusBadge status={user.status} />
+        {user.isFlagged && (
+          <Badge
+            variant="outline"
+            className="border-amber-500/60 bg-amber-500/10 text-amber-600"
+            title={user.flagReason ?? "Flagged"}
+          >
+            <Flag className="mr-1 h-3 w-3" />
+            Flagged
+          </Badge>
+        )}
         <span className="text-xs text-muted-foreground hidden sm:inline">
           {new Date(user.createdAt).toLocaleDateString()}
         </span>
@@ -179,6 +212,32 @@ function UserListItem({
                 </DropdownMenuItem>
               </>
             )}
+            {user.role === "influencer" &&
+              (user.isFlagged ? (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    className="text-emerald-600"
+                    onClick={() => onUnflag(user.id)}
+                    disabled={isFlagPending}
+                  >
+                    <FlagOff className="mr-2 h-4 w-4" />
+                    Remove Flag
+                  </DropdownMenuItem>
+                </>
+              ) : (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    className="text-amber-600"
+                    onClick={() => onFlag(user)}
+                    disabled={isFlagPending}
+                  >
+                    <Flag className="mr-2 h-4 w-4" />
+                    Flag Account
+                  </DropdownMenuItem>
+                </>
+              ))}
             <DropdownMenuSeparator />
             <DropdownMenuItem
               className="text-destructive"
@@ -200,9 +259,10 @@ export default function AdminUsersPage() {
   const [activeTab, setActiveTab] = useState("all");
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
-  const [userToDelete, setUserToDelete] = useState<
-    (typeof users)[number] | null
-  >(null);
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
+  const [userToFlag, setUserToFlag] = useState<User | null>(null);
+  const [flagReason, setFlagReason] = useState("");
+  const [flagError, setFlagError] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
   const {
@@ -224,15 +284,7 @@ export default function AdminUsersPage() {
   const { data: statsResponse, isLoading: isLoadingStats } =
     useUsersControllerGetAdminStats();
 
-  const users = (response?.data || []) as Array<{
-    id: string;
-    name: string;
-    email: string;
-    role: string;
-    status: string;
-    avatarUrl?: string;
-    createdAt: string;
-  }>;
+  const users = (response?.data || []) as User[];
 
   const stats = statsResponse || {
     totalUsers: 0,
@@ -260,6 +312,35 @@ export default function AdminUsersPage() {
           queryKey: getUsersControllerFindAllQueryKey(),
         });
         setUserToDelete(null);
+      },
+    },
+  });
+
+  const flagMutation = useUsersControllerFlagUser({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: getUsersControllerFindAllQueryKey(),
+        });
+        setUserToFlag(null);
+        setFlagReason("");
+        setFlagError(null);
+      },
+      onError: (error) => {
+        setFlagError(
+          (error as unknown as { response?: { data?: { message?: string } } })
+            ?.response?.data?.message || "Failed to flag user",
+        );
+      },
+    },
+  });
+
+  const unflagMutation = useUsersControllerUnflagUser({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: getUsersControllerFindAllQueryKey(),
+        });
       },
     },
   });
@@ -304,7 +385,7 @@ export default function AdminUsersPage() {
     });
   };
 
-  const handleDelete = (user: (typeof users)[number]) => {
+  const handleDelete = (user: User) => {
     setUserToDelete(user);
   };
 
@@ -312,6 +393,27 @@ export default function AdminUsersPage() {
     if (userToDelete) {
       deleteMutation.mutate({ id: userToDelete.id });
     }
+  };
+
+  const handleFlag = (user: User) => {
+    setFlagReason("");
+    setFlagError(null);
+    setUserToFlag(user);
+  };
+
+  const confirmFlag = () => {
+    const reason = flagReason.trim();
+    if (!reason) {
+      setFlagError("A reason is required to flag this account");
+      return;
+    }
+    if (userToFlag) {
+      flagMutation.mutate({ id: userToFlag.id, data: { reason } });
+    }
+  };
+
+  const handleUnflag = (id: string) => {
+    unflagMutation.mutate({ id });
   };
 
   const handleExport = async () => {
@@ -469,8 +571,13 @@ export default function AdminUsersPage() {
                     onReject={handleReject}
                     onSuspend={handleSuspend}
                     onUnsuspend={handleUnsuspend}
+                    onFlag={handleFlag}
+                    onUnflag={handleUnflag}
                     isStatusPending={updateStatusMutation.isPending}
                     isDeletePending={deleteMutation.isPending}
+                    isFlagPending={
+                      flagMutation.isPending || unflagMutation.isPending
+                    }
                   />
                 )}
                 isLoading={isLoading}
@@ -523,6 +630,69 @@ export default function AdminUsersPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Flag Account Dialog */}
+      <Dialog
+        open={!!userToFlag}
+        onOpenChange={(open) => {
+          if (!open) {
+            setUserToFlag(null);
+            setFlagReason("");
+            setFlagError(null);
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Flag Account</DialogTitle>
+            <DialogDescription>
+              Flag {userToFlag?.name || userToFlag?.email} for review. The
+              influencer will be notified with the reason you provide.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 py-2">
+            <Label htmlFor="flag-reason">Reason for flagging *</Label>
+            <Textarea
+              id="flag-reason"
+              placeholder="e.g., Submitted fake views, multiple fake accounts, spam submissions..."
+              value={flagReason}
+              onChange={(e) => {
+                setFlagReason(e.target.value);
+                setFlagError(null);
+              }}
+              rows={3}
+            />
+            {flagError && (
+              <p className="text-sm text-destructive">{flagError}</p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setUserToFlag(null);
+                setFlagReason("");
+                setFlagError(null);
+              }}
+              disabled={flagMutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmFlag}
+              disabled={flagMutation.isPending}
+            >
+              {flagMutation.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Flag className="mr-2 h-4 w-4" />
+              )}
+              Flag Account
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
