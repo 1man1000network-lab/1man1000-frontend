@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   usePaymentsControllerFindAll,
+  usePaymentsControllerUpdate,
   usePaymentsControllerUpdateStatus,
   usePaymentsControllerGetAdminStats,
   useCampaignsControllerFindAll,
@@ -33,6 +34,15 @@ import {
   AlertDialogTitle,
 } from "@workspace/ui/components/alert-dialog";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@workspace/ui/components/dialog";
+import { Label } from "@workspace/ui/components/label";
+import {
   Tabs,
   TabsContent,
   TabsList,
@@ -46,6 +56,7 @@ import {
   TrendingUp,
   ArrowUpDown,
   Download,
+  Pencil,
 } from "lucide-react";
 import { ErrorState } from "@/components/ui/error-state";
 import { ListPaginationWrapper } from "@/components/ui/list-pagination-wrapper";
@@ -60,12 +71,14 @@ type Payment = PaymentResponseDto;
 interface PaymentListItemProps {
   item: Payment;
   onMarkPaid: (payment: Payment) => void;
+  onEditAmount: (payment: Payment) => void;
   isUpdatingStatus: boolean;
 }
 
 function PaymentListItem({
   item: payment,
   onMarkPaid,
+  onEditAmount,
   isUpdatingStatus,
 }: PaymentListItemProps) {
   const influencerName =
@@ -118,14 +131,24 @@ function PaymentListItem({
           {payment.status}
         </Badge>
         {payment.status === "pending" && (
-          <Button
-            size="sm"
-            disabled={isUpdatingStatus}
-            onClick={() => onMarkPaid(payment)}
-          >
-            <CheckCircle className="mr-1 h-4 w-4" />
-            Mark Paid
-          </Button>
+          <>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => onEditAmount(payment)}
+            >
+              <Pencil className="mr-1 h-4 w-4" />
+              Edit Amount
+            </Button>
+            <Button
+              size="sm"
+              disabled={isUpdatingStatus}
+              onClick={() => onMarkPaid(payment)}
+            >
+              <CheckCircle className="mr-1 h-4 w-4" />
+              Mark Paid
+            </Button>
+          </>
         )}
       </div>
     </div>
@@ -143,6 +166,9 @@ export default function AdminPaymentsPage() {
   const [campaignId, setCampaignId] = useState("");
   const [isExporting, setIsExporting] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editAmount, setEditAmount] = useState("");
+  const [editError, setEditError] = useState("");
   const [selectedPayment, setSelectedPayment] =
     useState<PaymentResponseDto | null>(null);
 
@@ -193,9 +219,19 @@ export default function AdminPaymentsPage() {
   const { mutateAsync: updatePaymentStatus, isPending: isUpdatingStatus } =
     usePaymentsControllerUpdateStatus();
 
+  const { mutateAsync: updatePayment, isPending: isUpdatingPayment } =
+    usePaymentsControllerUpdate();
+
   const handleMarkPaid = (payment: Payment) => {
     setSelectedPayment(payment);
     setConfirmOpen(true);
+  };
+
+  const handleEditAmount = (payment: Payment) => {
+    setSelectedPayment(payment);
+    setEditAmount((payment.totalAmount ?? 0).toString());
+    setEditError("");
+    setEditOpen(true);
   };
 
   const handleExport = async () => {
@@ -411,6 +447,7 @@ export default function AdminPaymentsPage() {
                   <PaymentListItem
                     {...props}
                     onMarkPaid={handleMarkPaid}
+                    onEditAmount={handleEditAmount}
                     isUpdatingStatus={isUpdatingStatus}
                   />
                 )}
@@ -470,6 +507,83 @@ export default function AdminPaymentsPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog
+        open={editOpen}
+        onOpenChange={(open) => {
+          setEditOpen(open);
+          if (!open) {
+            setSelectedPayment(null);
+            setEditError("");
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit payment amount</DialogTitle>
+            <DialogDescription>
+              Update the amount to be paid to{" "}
+              {selectedInfluencerName as string} on {selectedCampaignName}.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="payment-amount">Amount (GH₵)</Label>
+            <Input
+              id="payment-amount"
+              type="number"
+              min="0"
+              step="0.01"
+              value={editAmount}
+              onChange={(e) => setEditAmount(e.target.value)}
+            />
+            {editError && (
+              <p className="text-sm text-destructive">{editError}</p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              disabled={isUpdatingPayment}
+              onClick={() => {
+                setEditOpen(false);
+                setSelectedPayment(null);
+                setEditError("");
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              disabled={!selectedPayment || isUpdatingPayment}
+              onClick={async () => {
+                if (!selectedPayment) return;
+                const amount = parseFloat(editAmount);
+                if (isNaN(amount) || amount < 0) {
+                  setEditError("Enter a valid amount");
+                  return;
+                }
+                try {
+                  await updatePayment({
+                    id: selectedPayment.id,
+                    data: { totalAmount: amount },
+                  });
+                  await refetch();
+                  await refetchStats();
+                  setEditOpen(false);
+                  setSelectedPayment(null);
+                  setEditError("");
+                } catch (error: any) {
+                  setEditError(
+                    error?.response?.data?.message ||
+                      "Failed to update payment amount",
+                  );
+                }
+              }}
+            >
+              {isUpdatingPayment ? "Saving..." : "Save"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

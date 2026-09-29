@@ -630,9 +630,20 @@ export interface RecentSubmissionCampaignDto {
   title?: string;
 }
 
+export type RecentSubmissionDtoApprovalStatus = typeof RecentSubmissionDtoApprovalStatus[keyof typeof RecentSubmissionDtoApprovalStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const RecentSubmissionDtoApprovalStatus = {
+  pending: 'pending',
+  approved: 'approved',
+  rejected: 'rejected',
+  reversed: 'reversed',
+} as const;
+
 export interface RecentSubmissionDto {
   id: string;
-  status: string;
+  approvalStatus: RecentSubmissionDtoApprovalStatus;
   influencer?: RecentSubmissionInfluencerDto;
   campaign?: RecentSubmissionCampaignDto;
 }
@@ -955,6 +966,7 @@ export const SubmissionResponseDtoApprovalStatus = {
   pending: 'pending',
   approved: 'approved',
   rejected: 'rejected',
+  reversed: 'reversed',
 } as const;
 
 export interface SubmissionResponseDto {
@@ -1122,6 +1134,12 @@ export interface InfluencerEarningsResponseDto {
   paidEarnings: number;
   pendingEarnings: number;
   totalPayments: number;
+}
+
+export interface UpdatePaymentDto {
+  totalAmount?: number;
+  viewsDelivered?: number;
+  ratePerView?: number;
 }
 
 export type UpdatePaymentStatusDtoStatus = typeof UpdatePaymentStatusDtoStatus[keyof typeof UpdatePaymentStatusDtoStatus];
@@ -6874,6 +6892,71 @@ export function usePaymentsControllerFindOne<TData = Awaited<ReturnType<typeof p
 
 
 /**
+ * @summary Update payment amount (Admin only)
+ */
+export const paymentsControllerUpdate = (
+    id: string,
+    updatePaymentDto: UpdatePaymentDto,
+ ) => {
+      
+      
+      return axiosInstance<PaymentResponseDto>(
+      {url: `/api/payments/${id}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updatePaymentDto
+    },
+      );
+    }
+  
+
+
+export const getPaymentsControllerUpdateMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof paymentsControllerUpdate>>, TError,{id: string;data: UpdatePaymentDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof paymentsControllerUpdate>>, TError,{id: string;data: UpdatePaymentDto}, TContext> => {
+
+const mutationKey = ['paymentsControllerUpdate'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof paymentsControllerUpdate>>, {id: string;data: UpdatePaymentDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  paymentsControllerUpdate(id,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PaymentsControllerUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof paymentsControllerUpdate>>>
+    export type PaymentsControllerUpdateMutationBody = UpdatePaymentDto
+    export type PaymentsControllerUpdateMutationError = void
+
+    /**
+ * @summary Update payment amount (Admin only)
+ */
+export const usePaymentsControllerUpdate = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof paymentsControllerUpdate>>, TError,{id: string;data: UpdatePaymentDto}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof paymentsControllerUpdate>>,
+        TError,
+        {id: string;data: UpdatePaymentDto},
+        TContext
+      > => {
+
+      const mutationOptions = getPaymentsControllerUpdateMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
  * @summary Update payment status (Admin only)
  */
 export const paymentsControllerUpdateStatus = (
@@ -8222,6 +8305,100 @@ export function useSurveysControllerGetIndividualResponses<TData = Awaited<Retur
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getSurveysControllerGetIndividualResponsesQueryOptions(id,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * @summary Export survey respondents list to CSV
+ */
+export const surveysControllerExportRespondentsToCsv = (
+    id: string,
+ signal?: AbortSignal
+) => {
+      
+      
+      return axiosInstance<Blob>(
+      {url: `/api/surveys/${id}/respondents/export`, method: 'GET',
+        responseType: 'blob', signal
+    },
+      );
+    }
+  
+
+
+
+export const getSurveysControllerExportRespondentsToCsvQueryKey = (id?: string,) => {
+    return [
+    `/api/surveys/${id}/respondents/export`
+    ] as const;
+    }
+
+    
+export const getSurveysControllerExportRespondentsToCsvQueryOptions = <TData = Awaited<ReturnType<typeof surveysControllerExportRespondentsToCsv>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof surveysControllerExportRespondentsToCsv>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSurveysControllerExportRespondentsToCsvQueryKey(id);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof surveysControllerExportRespondentsToCsv>>> = ({ signal }) => surveysControllerExportRespondentsToCsv(id, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof surveysControllerExportRespondentsToCsv>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SurveysControllerExportRespondentsToCsvQueryResult = NonNullable<Awaited<ReturnType<typeof surveysControllerExportRespondentsToCsv>>>
+export type SurveysControllerExportRespondentsToCsvQueryError = void
+
+
+export function useSurveysControllerExportRespondentsToCsv<TData = Awaited<ReturnType<typeof surveysControllerExportRespondentsToCsv>>, TError = void>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof surveysControllerExportRespondentsToCsv>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof surveysControllerExportRespondentsToCsv>>,
+          TError,
+          Awaited<ReturnType<typeof surveysControllerExportRespondentsToCsv>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSurveysControllerExportRespondentsToCsv<TData = Awaited<ReturnType<typeof surveysControllerExportRespondentsToCsv>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof surveysControllerExportRespondentsToCsv>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof surveysControllerExportRespondentsToCsv>>,
+          TError,
+          Awaited<ReturnType<typeof surveysControllerExportRespondentsToCsv>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSurveysControllerExportRespondentsToCsv<TData = Awaited<ReturnType<typeof surveysControllerExportRespondentsToCsv>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof surveysControllerExportRespondentsToCsv>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Export survey respondents list to CSV
+ */
+
+export function useSurveysControllerExportRespondentsToCsv<TData = Awaited<ReturnType<typeof surveysControllerExportRespondentsToCsv>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof surveysControllerExportRespondentsToCsv>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSurveysControllerExportRespondentsToCsvQueryOptions(id,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

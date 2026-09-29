@@ -385,7 +385,11 @@ export default function ClientDashboard() {
                           submission.campaign?.brandName}
                       </p>
                     </div>
-                    <Badge variant="outline">{submission.status}</Badge>
+                    <Badge variant="outline">
+                      {submission.approvalStatus === "reversed"
+                        ? "rejected"
+                        : submission.approvalStatus}
+                    </Badge>
                   </div>
                 ))
               ) : (

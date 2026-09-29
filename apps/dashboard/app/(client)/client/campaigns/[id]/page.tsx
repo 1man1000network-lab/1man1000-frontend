@@ -436,7 +436,13 @@ export default function CampaignDetailPage() {
                         {submission.verifiedViewCount?.toLocaleString() || 0}
                       </td>
                       <td className="py-3 px-2">
-                        <StatusBadge status={submission.approvalStatus} />
+                        <StatusBadge
+                          status={
+                            submission.approvalStatus === "reversed"
+                              ? "rejected"
+                              : submission.approvalStatus
+                          }
+                        />
                       </td>
                       <td className="py-3 px-2 text-muted-foreground">
                         {submission.submissionDate

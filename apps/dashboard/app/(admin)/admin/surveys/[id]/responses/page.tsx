@@ -5,6 +5,7 @@ import {
   GetSurveyResponseDto,
   useSurveysControllerFindOne,
   useSurveysControllerGetIndividualResponses,
+  surveysControllerExportRespondentsToCsv,
 } from "@workspace/client";
 import {
   Card,
@@ -34,6 +35,26 @@ export default function AdminSurveyResponsesPage() {
     useState<GetSurveyResponseDto | null>(null);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      const blob = await surveysControllerExportRespondentsToCsv(surveyId);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `survey-respondents-${survey?.title || surveyId}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error("Export failed:", error);
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   const {
     data: survey,
@@ -80,9 +101,13 @@ export default function AdminSurveyResponsesPage() {
             <p className="text-muted-foreground">{survey.title}</p>
           </div>
         </div>
-        <Button variant="outline">
+        <Button
+          variant="outline"
+          onClick={handleExport}
+          disabled={isExporting}
+        >
           <Download className="h-4 w-4 mr-2" />
-          Export Responses
+          {isExporting ? "Exporting..." : "Export Responses"}
         </Button>
       </div>
 
