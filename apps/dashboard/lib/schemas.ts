@@ -7,13 +7,13 @@ export const loginSchema = z.object({
 
 export type LoginFormData = z.infer<typeof loginSchema>;
 
-export const campaignSchema = z.object({
+const campaignBaseSchema = z.object({
   brandName: z.string().min(1, "Brand name is required"),
   title: z.string().optional(),
   description: z.string().optional(),
   budget: z.number().min(1, "Budget must be greater than 0"),
-  startDate: z.string().min(1, "Start date is required"),
-  endDate: z.string().min(1, "End date is required"),
+  startDate: z.string().min(1, "Start date & time is required"),
+  endDate: z.string().min(1, "End date & time is required"),
   targetViewRange: z.object({
     min: z.number().min(0, "Minimum views must be 0 or greater"),
     max: z.number().min(1, "Maximum views must be greater than 0"),
@@ -34,13 +34,23 @@ export const campaignSchema = z.object({
       }),
     )
     .optional(),
+  clientId: z.string().optional(),
+  parentCampaignId: z.string().optional(),
 });
+
+export const campaignSchema = campaignBaseSchema.refine(
+  (data) => new Date(data.endDate) > new Date(data.startDate),
+  {
+    message: "End date & time must be after start date & time",
+    path: ["endDate"],
+  },
+);
 
 export type CampaignFormData = z.infer<typeof campaignSchema>;
 
-export const updateCampaignSchema = campaignSchema.partial().extend({
+export const updateCampaignSchema = campaignBaseSchema.partial().extend({
   status: z
-    .enum(["pending", "approved", "active", "completed", "rejected"])
+    .enum(["pending", "approved", "active", "paused", "completed", "rejected"])
     .optional(),
 });
 

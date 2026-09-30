@@ -58,6 +58,7 @@ type Campaign = {
   ratePerView?: number;
   paymentTiers?: { lowerLimit: number; upperLimit?: number; amount: number }[];
   endDate: string;
+  status?: string;
 };
 
 export default function SubmitCampaignPage() {
@@ -208,8 +209,21 @@ export default function SubmitCampaignPage() {
 
   const c = campaign as Campaign;
   const isExpired = isCampaignExpired(c.endDate);
+  const isPaused = c.status === "paused";
+  const isUnavailable = c.status !== "approved" && c.status !== "active";
 
-  if (isExpired) {
+  if (isExpired || isPaused || isUnavailable) {
+    const heading = isExpired
+      ? "Campaign Expired"
+      : isPaused
+        ? "Campaign Paused"
+        : "Submissions Closed";
+    const message = isExpired
+      ? `This campaign has expired. The deadline was ${new Date(c.endDate).toLocaleString()}. Submissions are no longer being accepted.`
+      : isPaused
+        ? "This campaign has been paused by an administrator. Submissions are temporarily disabled — check back later."
+        : "This campaign is no longer accepting submissions.";
+
     return (
       <div className="space-y-6 max-w-2xl">
         <div className="flex items-center gap-4">
@@ -219,9 +233,7 @@ export default function SubmitCampaignPage() {
             </Link>
           </Button>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">
-              Campaign Expired
-            </h1>
+            <h1 className="text-2xl font-bold tracking-tight">{heading}</h1>
             <p className="text-muted-foreground">{c.title || c.brandName}</p>
           </div>
         </div>
@@ -233,11 +245,7 @@ export default function SubmitCampaignPage() {
             </div>
             <div>
               <h2 className="text-lg font-semibold">Submissions Closed</h2>
-              <p className="text-muted-foreground mt-1">
-                This campaign has expired. The deadline was{" "}
-                {new Date(c.endDate).toLocaleDateString()}. Submissions are no
-                longer being accepted.
-              </p>
+              <p className="text-muted-foreground mt-1">{message}</p>
             </div>
             <Button asChild>
               <Link href={`/influencer/campaigns/${campaignId}`}>

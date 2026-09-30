@@ -3,7 +3,7 @@ export type UserStatus = "pending" | "approved" | "rejected";
 export type CampaignStatus =
   | "pending"
   | "approved"
-  | "active"
+  | "paused"
   | "completed"
   | "rejected";
 export type SubmissionStatus = "pending" | "approved" | "rejected";
@@ -11,9 +11,12 @@ export type PaymentStatus = "pending" | "processing" | "completed" | "failed";
 export type SurveyStatus =
   | "draft"
   | "pending"
+  | "approved"
   | "active"
+  | "paused"
   | "completed"
-  | "closed";
+  | "closed"
+  | "rejected";
 
 export interface User {
   id: string;

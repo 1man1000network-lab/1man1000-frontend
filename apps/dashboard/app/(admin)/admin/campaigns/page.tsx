@@ -4,8 +4,8 @@ import { useState, useMemo, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   useCampaignsControllerFindAll,
-  useCampaignsControllerUpdate,
-  UpdateCampaignDtoStatus,
+  useCampaignsControllerUpdateStatus,
+  UpdateCampaignStatusDtoStatus,
   CampaignsListResponseDto,
 } from "@workspace/client";
 import { Button } from "@workspace/ui/components/button";
@@ -35,6 +35,9 @@ import {
   Plus,
   Loader2,
   ArrowUpDown,
+  Pause,
+  Play,
+  OctagonX,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -87,7 +90,7 @@ export default function AdminCampaignsPage() {
     }
   }, [response, isLoading]);
 
-  const updateStatusMutation = useCampaignsControllerUpdate({
+  const updateStatusMutation = useCampaignsControllerUpdateStatus({
     mutation: {
       onSuccess: () => {
         refetch();
@@ -135,7 +138,7 @@ export default function AdminCampaignsPage() {
       await updateStatusMutation.mutateAsync({
         id: approvingCampaign.id,
         data: {
-          status: UpdateCampaignDtoStatus.approved,
+          status: UpdateCampaignStatusDtoStatus.approved,
           paymentTiers: validTiers,
         },
       });
@@ -152,10 +155,64 @@ export default function AdminCampaignsPage() {
         try {
           await updateStatusMutation.mutateAsync({
             id,
-            data: { status: UpdateCampaignDtoStatus.rejected },
+            data: { status: UpdateCampaignStatusDtoStatus.rejected },
           });
         } catch (error) {
           console.error("Error rejecting campaign:", error);
+        }
+      }
+    },
+    [updateStatusMutation],
+  );
+
+  const handlePause = useCallback(
+    async (id: string) => {
+      if (
+        window.confirm(
+          "Pause this campaign? Influencers won't be able to participate or submit while paused.",
+        )
+      ) {
+        try {
+          await updateStatusMutation.mutateAsync({
+            id,
+            data: { status: UpdateCampaignStatusDtoStatus.paused },
+          });
+        } catch (error) {
+          console.error("Error pausing campaign:", error);
+        }
+      }
+    },
+    [updateStatusMutation],
+  );
+
+  const handleResume = useCallback(
+    async (id: string) => {
+      try {
+        await updateStatusMutation.mutateAsync({
+          id,
+          data: { status: UpdateCampaignStatusDtoStatus.approved },
+        });
+      } catch (error) {
+        console.error("Error resuming campaign:", error);
+      }
+    },
+    [updateStatusMutation],
+  );
+
+  const handleEnd = useCallback(
+    async (id: string) => {
+      if (
+        window.confirm(
+          "End this campaign? It will be marked as completed and will no longer accept participation or submissions.",
+        )
+      ) {
+        try {
+          await updateStatusMutation.mutateAsync({
+            id,
+            data: { status: UpdateCampaignStatusDtoStatus.completed },
+          });
+        } catch (error) {
+          console.error("Error ending campaign:", error);
         }
       }
     },
@@ -337,6 +394,59 @@ export default function AdminCampaignsPage() {
                       </DropdownMenuItem>
                     </>
                   )}
+                  {campaign.status === "approved" && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handlePause(campaign.id);
+                        }}
+                        disabled={updateStatusMutation.isPending}
+                      >
+                        <Pause className="mr-2 h-4 w-4" />
+                        Pause
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className="text-destructive"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEnd(campaign.id);
+                        }}
+                        disabled={updateStatusMutation.isPending}
+                      >
+                        <OctagonX className="mr-2 h-4 w-4" />
+                        End Campaign
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                  {campaign.status === "paused" && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        className="text-emerald-600"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleResume(campaign.id);
+                        }}
+                        disabled={updateStatusMutation.isPending}
+                      >
+                        <Play className="mr-2 h-4 w-4" />
+                        Resume
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className="text-destructive"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEnd(campaign.id);
+                        }}
+                        disabled={updateStatusMutation.isPending}
+                      >
+                        <OctagonX className="mr-2 h-4 w-4" />
+                        End Campaign
+                      </DropdownMenuItem>
+                    </>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             );
@@ -348,6 +458,9 @@ export default function AdminCampaignsPage() {
         updateStatusMutation.isPending,
         handleApproveClick,
         handleReject,
+        handlePause,
+        handleResume,
+        handleEnd,
       ],
     );
 
@@ -374,7 +487,7 @@ export default function AdminCampaignsPage() {
           <option value="all">All Statuses</option>
           <option value="pending">Pending</option>
           <option value="approved">Approved</option>
-          <option value="active">Active</option>
+          <option value="paused">Paused</option>
           <option value="completed">Completed</option>
           <option value="rejected">Rejected</option>
         </select>

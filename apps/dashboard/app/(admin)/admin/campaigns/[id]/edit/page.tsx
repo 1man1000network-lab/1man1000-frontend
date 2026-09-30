@@ -17,6 +17,7 @@ import { CampaignForm } from "@/components/campaign-form";
 import { LoadingState } from "@/components/ui/loading-state";
 import { ErrorState } from "@/components/ui/error-state";
 import { type CampaignFormData } from "@/lib/schemas";
+import { toDateTimeInputValue } from "@/lib/campaign-utils";
 import axios from "axios";
 
 export default function AdminEditCampaignPage() {
@@ -76,20 +77,13 @@ export default function AdminEditCampaignPage() {
   const defaultValues = useMemo((): Partial<CampaignFormData> | undefined => {
     if (!campaign) return undefined;
 
-    const toDateInput = (value?: string | Date) => {
-      if (!value) return undefined;
-      const d = typeof value === "string" ? new Date(value) : value;
-      if (Number.isNaN(d.getTime())) return undefined;
-      return d.toISOString().slice(0, 10);
-    };
-
     return {
       brandName: campaign.brandName,
       title: campaign.title || undefined,
       description: campaign.description || undefined,
       budget: campaign.budget,
-      startDate: toDateInput(campaign.startDate),
-      endDate: toDateInput(campaign.endDate),
+      startDate: toDateTimeInputValue(campaign.startDate),
+      endDate: toDateTimeInputValue(campaign.endDate),
       targetViewRange: campaign.targetViewRange as any,
       targetAudience: campaign.targetAudience,
       industry: campaign.industry,

@@ -145,11 +145,16 @@ export default function TakeSurveyPage() {
   };
 
   if (startMutation.isError) {
+    const err = startMutation.error as unknown as {
+      response?: { data?: { message?: string } };
+    };
     return (
       <ErrorState
-        title="Failed to load survey"
-        message="There was an error loading the survey."
-        onRetry={() => startMutation.mutate({ id: surveyId })}
+        title="Survey unavailable"
+        message={
+          err?.response?.data?.message ||
+          "This survey is not accepting responses right now."
+        }
       />
     );
   }

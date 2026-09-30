@@ -22,6 +22,9 @@ import {
   Loader2,
   ArrowUpDown,
   Trash2,
+  Pause,
+  Play,
+  OctagonX,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -49,6 +52,7 @@ const statusColors = {
   pending: "bg-yellow-100 text-yellow-800",
   completed: "bg-blue-100 text-blue-800",
   paused: "bg-gray-100 text-gray-800",
+  closed: "bg-gray-100 text-gray-800",
   rejected: "bg-red-100 text-red-800",
   approved: "bg-green-100 text-green-800",
 };
@@ -159,6 +163,60 @@ export default function AdminSurveysPage() {
           });
         } catch (error) {
           console.error("Error rejecting survey:", error);
+        }
+      }
+    },
+    [updateStatusMutation],
+  );
+
+  const handlePause = useCallback(
+    async (id: string) => {
+      if (
+        window.confirm(
+          "Pause this survey? It will stop accepting responses until resumed.",
+        )
+      ) {
+        try {
+          await updateStatusMutation.mutateAsync({
+            id,
+            data: { status: UpdateSurveyStatusDtoStatus.paused },
+          });
+        } catch (error) {
+          console.error("Error pausing survey:", error);
+        }
+      }
+    },
+    [updateStatusMutation],
+  );
+
+  const handleResume = useCallback(
+    async (id: string) => {
+      try {
+        await updateStatusMutation.mutateAsync({
+          id,
+          data: { status: UpdateSurveyStatusDtoStatus.approved },
+        });
+      } catch (error) {
+        console.error("Error resuming survey:", error);
+      }
+    },
+    [updateStatusMutation],
+  );
+
+  const handleEnd = useCallback(
+    async (id: string) => {
+      if (
+        window.confirm(
+          "End this survey? It will be closed permanently and stop accepting responses.",
+        )
+      ) {
+        try {
+          await updateStatusMutation.mutateAsync({
+            id,
+            data: { status: UpdateSurveyStatusDtoStatus.closed },
+          });
+        } catch (error) {
+          console.error("Error ending survey:", error);
         }
       }
     },
@@ -329,6 +387,60 @@ export default function AdminSurveysPage() {
                     </DropdownMenuItem>
                   </>
                 )}
+                {(survey.status === "approved" ||
+                  survey.status === "active") && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handlePause(survey.id);
+                      }}
+                      disabled={updateStatusMutation.isPending}
+                    >
+                      <Pause className="mr-2 h-4 w-4" />
+                      Pause
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="text-destructive"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEnd(survey.id);
+                      }}
+                      disabled={updateStatusMutation.isPending}
+                    >
+                      <OctagonX className="mr-2 h-4 w-4" />
+                      End Survey
+                    </DropdownMenuItem>
+                  </>
+                )}
+                {survey.status === "paused" && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      className="text-emerald-600"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleResume(survey.id);
+                      }}
+                      disabled={updateStatusMutation.isPending}
+                    >
+                      <Play className="mr-2 h-4 w-4" />
+                      Resume
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="text-destructive"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEnd(survey.id);
+                      }}
+                      disabled={updateStatusMutation.isPending}
+                    >
+                      <OctagonX className="mr-2 h-4 w-4" />
+                      End Survey
+                    </DropdownMenuItem>
+                  </>
+                )}
                 {survey.status !== "approved" && (
                   <>
                     <DropdownMenuSeparator />
@@ -356,6 +468,9 @@ export default function AdminSurveysPage() {
       updateStatusMutation.isPending,
       handleApprove,
       handleReject,
+      handlePause,
+      handleResume,
+      handleEnd,
       deleteMutation.isPending,
       handleDelete,
     ],
@@ -385,7 +500,9 @@ export default function AdminSurveysPage() {
           <option value="pending">Pending</option>
           <option value="approved">Approved</option>
           <option value="active">Active</option>
+          <option value="paused">Paused</option>
           <option value="completed">Completed</option>
+          <option value="closed">Closed</option>
           <option value="rejected">Rejected</option>
         </select>
       </div>

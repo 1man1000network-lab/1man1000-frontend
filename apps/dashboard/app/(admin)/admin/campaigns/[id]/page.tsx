@@ -6,12 +6,12 @@ import { CampaignAssetModal } from "@/components/campaign-asset-modal";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   useCampaignsControllerFindOne,
-  useCampaignsControllerUpdate,
+  useCampaignsControllerUpdateStatus,
   useCampaignsControllerDelete,
   useSubmissionsControllerGetCampaignSubmissions,
   getCampaignsControllerFindOneQueryKey,
   getCampaignsControllerFindAllQueryKey,
-  UpdateCampaignDtoStatus,
+  UpdateCampaignStatusDtoStatus,
 } from "@workspace/client";
 import {
   Card,
@@ -44,6 +44,10 @@ import {
   Copy,
   Check,
   AlertTriangle,
+  Pause,
+  Play,
+  OctagonX,
+  GitBranch,
 } from "lucide-react";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { LoadingState } from "@/components/ui/loading-state";
@@ -115,7 +119,7 @@ export default function CampaignDetailPage() {
   const submissions = submissionsResponse?.data || [];
   const submissionsMeta = submissionsResponse?.meta;
 
-  const updateMutation = useCampaignsControllerUpdate({
+  const updateMutation = useCampaignsControllerUpdateStatus({
     mutation: {
       onSuccess: () => {
         queryClient.invalidateQueries({
@@ -174,7 +178,7 @@ export default function CampaignDetailPage() {
       await updateMutation.mutateAsync({
         id: campaignId,
         data: {
-          status: UpdateCampaignDtoStatus.approved,
+          status: UpdateCampaignStatusDtoStatus.approved,
           paymentTiers: validTiers as any,
         },
       });
@@ -182,6 +186,19 @@ export default function CampaignDetailPage() {
       setPaymentTiers([{ lowerLimit: "0", upperLimit: "", amount: "" }]);
     } catch (error) {
       console.error("Error approving campaign:", error);
+    }
+  };
+
+  const handleEnd = () => {
+    if (
+      window.confirm(
+        "End this campaign? It will be marked as completed and will no longer accept participation or submissions.",
+      )
+    ) {
+      updateMutation.mutate({
+        id: campaignId,
+        data: { status: UpdateCampaignStatusDtoStatus.completed },
+      });
     }
   };
 
@@ -261,7 +278,7 @@ export default function CampaignDetailPage() {
                 onClick={() =>
                   updateMutation.mutate({
                     id: campaignId,
-                    data: { status: UpdateCampaignDtoStatus.rejected },
+                    data: { status: UpdateCampaignStatusDtoStatus.rejected },
                   })
                 }
                 disabled={updateMutation.isPending}
@@ -270,6 +287,67 @@ export default function CampaignDetailPage() {
                 Reject
               </Button>
             </>
+          )}
+          {c.status === "approved" && (
+            <>
+              <Button
+                variant="outline"
+                onClick={() =>
+                  updateMutation.mutate({
+                    id: campaignId,
+                    data: { status: UpdateCampaignStatusDtoStatus.paused },
+                  })
+                }
+                disabled={updateMutation.isPending}
+              >
+                <Pause className="h-4 w-4 mr-2" />
+                Pause
+              </Button>
+              <Button
+                variant="outline"
+                className="text-destructive border-destructive hover:bg-destructive/10"
+                onClick={handleEnd}
+                disabled={updateMutation.isPending}
+              >
+                <OctagonX className="h-4 w-4 mr-2" />
+                End Campaign
+              </Button>
+            </>
+          )}
+          {c.status === "paused" && (
+            <>
+              <Button
+                variant="outline"
+                className="text-emerald-600 border-emerald-600 hover:bg-emerald-50"
+                onClick={() =>
+                  updateMutation.mutate({
+                    id: campaignId,
+                    data: { status: UpdateCampaignStatusDtoStatus.approved },
+                  })
+                }
+                disabled={updateMutation.isPending}
+              >
+                <Play className="h-4 w-4 mr-2" />
+                Resume
+              </Button>
+              <Button
+                variant="outline"
+                className="text-destructive border-destructive hover:bg-destructive/10"
+                onClick={handleEnd}
+                disabled={updateMutation.isPending}
+              >
+                <OctagonX className="h-4 w-4 mr-2" />
+                End Campaign
+              </Button>
+            </>
+          )}
+          {!c.parentCampaignId && (
+            <Button variant="outline" asChild>
+              <Link href={`/admin/campaigns/new?parent=${campaignId}`}>
+                <GitBranch className="h-4 w-4 mr-2" />
+                Sub-Campaign
+              </Link>
+            </Button>
           )}
           <Button variant="outline" asChild>
             <Link href={`/admin/campaigns/${campaignId}/edit`}>
@@ -305,6 +383,25 @@ export default function CampaignDetailPage() {
           </AlertDialog>
         </div>
       </div>
+
+      {c.parentCampaign && (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardContent className="flex items-center gap-3 p-4">
+            <GitBranch className="h-5 w-5 text-primary shrink-0" />
+            <div className="text-sm">
+              <span className="text-muted-foreground">
+                Sub-campaign of{" "}
+              </span>
+              <Link
+                href={`/admin/campaigns/${c.parentCampaign.id}`}
+                className="font-medium text-primary hover:underline"
+              >
+                {c.parentCampaign.title || c.parentCampaign.brandName}
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <Card>
@@ -405,6 +502,53 @@ export default function CampaignDetailPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Sub-campaigns */}
+      {!!c.subCampaigns?.length && (
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle>Sub-Campaigns ({c.subCampaigns.length})</CardTitle>
+              <CardDescription>
+                Smaller campaigns feeding into this campaign
+              </CardDescription>
+            </div>
+            <Button variant="outline" size="sm" asChild>
+              <Link href={`/admin/campaigns/new?parent=${campaignId}`}>
+                <GitBranch className="h-4 w-4 mr-2" />
+                Create Sub-Campaign
+              </Link>
+            </Button>
+          </CardHeader>
+          <CardContent>
+            <div className="divide-y divide-border/60">
+              {c.subCampaigns.map((sub) => (
+                <Link
+                  key={sub.id}
+                  href={`/admin/campaigns/${sub.id}`}
+                  className="flex items-center justify-between py-3 hover:bg-muted/50 -mx-2 px-2 rounded-lg transition-colors"
+                >
+                  <div>
+                    <p className="font-medium">
+                      {sub.title || sub.brandName}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {sub.brandName} · Ends{" "}
+                      {new Date(sub.endDate).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm text-muted-foreground">
+                      {(sub.totalViews || 0).toLocaleString()} views
+                    </span>
+                    <StatusBadge status={sub.status} />
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Submissions Table */}
       <Card>

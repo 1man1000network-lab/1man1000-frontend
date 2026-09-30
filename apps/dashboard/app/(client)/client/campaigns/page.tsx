@@ -50,7 +50,7 @@ export default function ClientCampaignsPage() {
   });
 
   const activeCount = campaigns.filter(
-    (c) => c.status === "active" || c.status === "approved",
+    (c) => c.status === "approved",
   ).length;
   const pendingCount = campaigns.filter((c) => c.status === "pending").length;
   const completedCount = campaigns.filter(

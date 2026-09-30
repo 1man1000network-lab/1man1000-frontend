@@ -36,6 +36,7 @@ import { isCampaignExpired } from "@/lib/campaign-utils";
 const statusColors = {
   active: "bg-green-100 text-green-800",
   pending: "bg-yellow-100 text-yellow-800",
+  paused: "bg-orange-100 text-orange-800",
   completed: "bg-blue-100 text-blue-800",
   rejected: "bg-red-100 text-red-800",
   approved: "bg-green-100 text-green-800",
@@ -124,6 +125,16 @@ export default function CampaignDetailPage() {
             <Button size="lg" disabled variant="secondary">
               <Clock className="h-4 w-4 mr-2" />
               Campaign Expired
+            </Button>
+          ) : campaign.status === "paused" ? (
+            <Button size="lg" disabled variant="secondary">
+              <Clock className="h-4 w-4 mr-2" />
+              Campaign Paused
+            </Button>
+          ) : campaign.status !== "approved" ? (
+            <Button size="lg" disabled variant="secondary">
+              <Clock className="h-4 w-4 mr-2" />
+              Not Accepting Submissions
             </Button>
           ) : (
             <Button size="lg" asChild>

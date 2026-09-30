@@ -24,6 +24,9 @@ import {
   CheckCircle,
   XCircle,
   Pencil,
+  Pause,
+  Play,
+  OctagonX,
 } from "lucide-react";
 import {
   Dialog,
@@ -156,6 +159,51 @@ export default function AdminSurveyDetailPage() {
     }
   };
 
+  const handlePause = async () => {
+    if (
+      window.confirm(
+        "Pause this survey? It will stop accepting responses until resumed.",
+      )
+    ) {
+      try {
+        await updateStatusMutation.mutateAsync({
+          id: surveyId,
+          data: { status: UpdateSurveyStatusDtoStatus.paused },
+        });
+      } catch (error) {
+        console.error("Error pausing survey:", error);
+      }
+    }
+  };
+
+  const handleResume = async () => {
+    try {
+      await updateStatusMutation.mutateAsync({
+        id: surveyId,
+        data: { status: UpdateSurveyStatusDtoStatus.approved },
+      });
+    } catch (error) {
+      console.error("Error resuming survey:", error);
+    }
+  };
+
+  const handleEnd = async () => {
+    if (
+      window.confirm(
+        "End this survey? It will be closed permanently and stop accepting responses.",
+      )
+    ) {
+      try {
+        await updateStatusMutation.mutateAsync({
+          id: surveyId,
+          data: { status: UpdateSurveyStatusDtoStatus.closed },
+        });
+      } catch (error) {
+        console.error("Error ending survey:", error);
+      }
+    }
+  };
+
   if (isLoading) {
     return <LoadingState text="Loading survey details..." />;
   }
@@ -223,6 +271,49 @@ export default function AdminSurveyDetailPage() {
               >
                 <XCircle className="h-4 w-4 mr-2" />
                 Reject
+              </Button>
+            </>
+          )}
+          {(survey.status === "approved" || survey.status === "active") && (
+            <>
+              <Button
+                variant="outline"
+                onClick={handlePause}
+                disabled={updateStatusMutation.isPending}
+              >
+                <Pause className="h-4 w-4 mr-2" />
+                Pause
+              </Button>
+              <Button
+                variant="outline"
+                className="text-destructive border-destructive hover:bg-destructive/10"
+                onClick={handleEnd}
+                disabled={updateStatusMutation.isPending}
+              >
+                <OctagonX className="h-4 w-4 mr-2" />
+                End Survey
+              </Button>
+            </>
+          )}
+          {survey.status === "paused" && (
+            <>
+              <Button
+                variant="outline"
+                className="text-emerald-600 border-emerald-600 hover:bg-emerald-50"
+                onClick={handleResume}
+                disabled={updateStatusMutation.isPending}
+              >
+                <Play className="h-4 w-4 mr-2" />
+                Resume
+              </Button>
+              <Button
+                variant="outline"
+                className="text-destructive border-destructive hover:bg-destructive/10"
+                onClick={handleEnd}
+                disabled={updateStatusMutation.isPending}
+              >
+                <OctagonX className="h-4 w-4 mr-2" />
+                End Survey
               </Button>
             </>
           )}

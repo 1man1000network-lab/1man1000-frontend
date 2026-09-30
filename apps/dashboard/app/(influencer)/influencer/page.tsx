@@ -120,7 +120,7 @@ export default function InfluencerDashboard() {
 
   const campaigns = campaignsResponse?.data || [];
   const activeCampaignsCount = campaigns.filter(
-    (c) => c.status === "active" || c.status === "approved",
+    (c) => c.status === "approved",
   ).length;
 
   const availableCampaigns = availableCampaignsResponse?.data || [];
@@ -159,7 +159,7 @@ export default function InfluencerDashboard() {
   });
 
   const activeCampaigns = campaigns
-    .filter((c: any) => c.status === "active" || c.status === "approved")
+    .filter((c: any) => c.status === "approved")
     .slice(0, 3)
     .map((c: any) => {
       const endDate = new Date(c.endDate);

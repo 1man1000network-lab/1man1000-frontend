@@ -71,7 +71,7 @@ export default function ClientAnalyticsPage() {
 
   // Get campaign performance data
   const campaignPerformance = campaigns
-    .filter((c) => c.status === "active" || c.status === "approved")
+    .filter((c) => c.status === "approved")
     .map((campaign) => ({
       id: campaign.id,
       name: campaign.title || campaign.brandName,

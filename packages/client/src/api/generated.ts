@@ -321,6 +321,19 @@ export interface UsersStatsResponseDto {
   approvedCount: number;
 }
 
+export interface ClientSummaryDto {
+  id: string;
+  /** @nullable */
+  name?: string | null;
+  email: string;
+  /** @nullable */
+  company?: string | null;
+  /** @nullable */
+  phone?: string | null;
+  /** @nullable */
+  registrationDate?: string | null;
+}
+
 export interface LeaderboardEntryDto {
   rank: number;
   influencerId: string;
@@ -455,6 +468,10 @@ export interface CreateCampaignDto {
   adCreatives?: string[];
   paymentTiers?: PaymentTierDto[];
   paymentType?: CreateCampaignDtoPaymentType;
+  /** Client to assign the campaign to (Admin only) */
+  clientId?: string;
+  /** Parent campaign this campaign is a sub-campaign of */
+  parentCampaignId?: string;
 }
 
 export interface TargetViewRangeResponseDto {
@@ -479,6 +496,16 @@ export type InfluencerAssignmentDtoInfluencer = { [key: string]: unknown };
 export interface InfluencerAssignmentDto {
   id: string;
   influencer?: InfluencerAssignmentDtoInfluencer;
+}
+
+export interface CampaignSummaryDto {
+  id: string;
+  /** @nullable */
+  title?: string | null;
+  brandName: string;
+  status: string;
+  totalViews: number;
+  endDate: string;
 }
 
 export interface CampaignCountsDto {
@@ -508,10 +535,9 @@ export type CampaignResponseDtoStatus = typeof CampaignResponseDtoStatus[keyof t
 export const CampaignResponseDtoStatus = {
   pending: 'pending',
   approved: 'approved',
-  active: 'active',
+  paused: 'paused',
   completed: 'completed',
   rejected: 'rejected',
-  assigned: 'assigned',
 } as const;
 
 export type CampaignResponseDtoPaymentType = typeof CampaignResponseDtoPaymentType[keyof typeof CampaignResponseDtoPaymentType];
@@ -522,6 +548,11 @@ export const CampaignResponseDtoPaymentType = {
   per_view: 'per_view',
   per_views: 'per_views',
 } as const;
+
+/**
+ * @nullable
+ */
+export type CampaignResponseDtoParentCampaign = CampaignSummaryDto | null;
 
 export interface CampaignResponseDto {
   id: string;
@@ -546,6 +577,11 @@ export interface CampaignResponseDto {
   paymentTiers?: PaymentTierResponseDto[];
   client?: ClientInfoDto;
   assignedInfluencers?: InfluencerAssignmentDto[];
+  /** @nullable */
+  parentCampaignId?: string | null;
+  /** @nullable */
+  parentCampaign?: CampaignResponseDtoParentCampaign;
+  subCampaigns?: CampaignSummaryDto[];
   createdAt: string;
   updatedAt: string;
   _count?: CampaignCountsDto;
@@ -587,10 +623,9 @@ export type ClientCampaignResponseDtoStatus = typeof ClientCampaignResponseDtoSt
 export const ClientCampaignResponseDtoStatus = {
   pending: 'pending',
   approved: 'approved',
-  active: 'active',
+  paused: 'paused',
   completed: 'completed',
   rejected: 'rejected',
-  assigned: 'assigned',
 } as const;
 
 export type ClientCampaignResponseDtoPaymentType = typeof ClientCampaignResponseDtoPaymentType[keyof typeof ClientCampaignResponseDtoPaymentType];
@@ -601,6 +636,11 @@ export const ClientCampaignResponseDtoPaymentType = {
   per_view: 'per_view',
   per_views: 'per_views',
 } as const;
+
+/**
+ * @nullable
+ */
+export type ClientCampaignResponseDtoParentCampaign = CampaignSummaryDto | null;
 
 export interface ClientCampaignResponseDto {
   id: string;
@@ -625,6 +665,11 @@ export interface ClientCampaignResponseDto {
   paymentTiers?: PaymentTierResponseDto[];
   client?: ClientInfoDto;
   assignedInfluencers?: InfluencerAssignmentDto[];
+  /** @nullable */
+  parentCampaignId?: string | null;
+  /** @nullable */
+  parentCampaign?: ClientCampaignResponseDtoParentCampaign;
+  subCampaigns?: CampaignSummaryDto[];
   createdAt: string;
   updatedAt: string;
   _count?: CampaignCountsDto;
@@ -706,10 +751,9 @@ export type InfluencerCampaignResponseDtoStatus = typeof InfluencerCampaignRespo
 export const InfluencerCampaignResponseDtoStatus = {
   pending: 'pending',
   approved: 'approved',
-  active: 'active',
+  paused: 'paused',
   completed: 'completed',
   rejected: 'rejected',
-  assigned: 'assigned',
 } as const;
 
 export type InfluencerCampaignResponseDtoPaymentType = typeof InfluencerCampaignResponseDtoPaymentType[keyof typeof InfluencerCampaignResponseDtoPaymentType];
@@ -720,6 +764,11 @@ export const InfluencerCampaignResponseDtoPaymentType = {
   per_view: 'per_view',
   per_views: 'per_views',
 } as const;
+
+/**
+ * @nullable
+ */
+export type InfluencerCampaignResponseDtoParentCampaign = CampaignSummaryDto | null;
 
 export type InfluencerCampaignResponseDtoAssignmentStatus = typeof InfluencerCampaignResponseDtoAssignmentStatus[keyof typeof InfluencerCampaignResponseDtoAssignmentStatus];
 
@@ -756,6 +805,11 @@ export interface InfluencerCampaignResponseDto {
   paymentTiers?: PaymentTierResponseDto[];
   client?: ClientInfoDto;
   assignedInfluencers?: InfluencerAssignmentDto[];
+  /** @nullable */
+  parentCampaignId?: string | null;
+  /** @nullable */
+  parentCampaign?: InfluencerCampaignResponseDtoParentCampaign;
+  subCampaigns?: CampaignSummaryDto[];
   createdAt: string;
   updatedAt: string;
   _count?: CampaignCountsDto;
@@ -834,6 +888,16 @@ export interface CampaignDetailCountDto {
   submissions: number;
 }
 
+export interface CampaignSummaryDetailDto {
+  id: string;
+  /** @nullable */
+  title?: string | null;
+  brandName: string;
+  status: string;
+  totalViews: number;
+  endDate: string;
+}
+
 export type CampaignDetailResponseDtoStatus = typeof CampaignDetailResponseDtoStatus[keyof typeof CampaignDetailResponseDtoStatus];
 
 
@@ -841,7 +905,7 @@ export type CampaignDetailResponseDtoStatus = typeof CampaignDetailResponseDtoSt
 export const CampaignDetailResponseDtoStatus = {
   pending: 'pending',
   approved: 'approved',
-  active: 'active',
+  paused: 'paused',
   completed: 'completed',
   rejected: 'rejected',
 } as const;
@@ -854,6 +918,11 @@ export const CampaignDetailResponseDtoPaymentType = {
   per_view: 'per_view',
   per_views: 'per_views',
 } as const;
+
+/**
+ * @nullable
+ */
+export type CampaignDetailResponseDtoParentCampaign = CampaignSummaryDetailDto | null;
 
 export interface CampaignDetailResponseDto {
   id: string;
@@ -876,30 +945,14 @@ export interface CampaignDetailResponseDto {
   assignments?: CampaignDetailAssignmentDto[];
   submissions?: CampaignDetailSubmissionDto[];
   _count?: CampaignDetailCountDto;
+  /** @nullable */
+  parentCampaignId?: string | null;
+  /** @nullable */
+  parentCampaign?: CampaignDetailResponseDtoParentCampaign;
+  subCampaigns?: CampaignSummaryDetailDto[];
   createdAt: string;
   updatedAt: string;
 }
-
-export type UpdateCampaignDtoStatus = typeof UpdateCampaignDtoStatus[keyof typeof UpdateCampaignDtoStatus];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const UpdateCampaignDtoStatus = {
-  pending: 'pending',
-  approved: 'approved',
-  active: 'active',
-  completed: 'completed',
-  rejected: 'rejected',
-} as const;
-
-export type UpdateCampaignDtoPaymentType = typeof UpdateCampaignDtoPaymentType[keyof typeof UpdateCampaignDtoPaymentType];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const UpdateCampaignDtoPaymentType = {
-  per_view: 'per_view',
-  per_views: 'per_views',
-} as const;
 
 export interface UpdateCampaignDto {
   brandName?: string;
@@ -913,10 +966,34 @@ export interface UpdateCampaignDto {
   industry?: string;
   adCreatives?: string[];
   campaignAsset?: string;
-  status?: UpdateCampaignDtoStatus;
-  paymentTiers?: PaymentTierDto[];
   submissionDeadlineDays?: number;
-  paymentType?: UpdateCampaignDtoPaymentType;
+}
+
+export type UpdateCampaignStatusDtoStatus = typeof UpdateCampaignStatusDtoStatus[keyof typeof UpdateCampaignStatusDtoStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UpdateCampaignStatusDtoStatus = {
+  pending: 'pending',
+  approved: 'approved',
+  paused: 'paused',
+  completed: 'completed',
+  rejected: 'rejected',
+} as const;
+
+export type UpdateCampaignStatusDtoPaymentType = typeof UpdateCampaignStatusDtoPaymentType[keyof typeof UpdateCampaignStatusDtoPaymentType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const UpdateCampaignStatusDtoPaymentType = {
+  per_view: 'per_view',
+  per_views: 'per_views',
+} as const;
+
+export interface UpdateCampaignStatusDto {
+  status: UpdateCampaignStatusDtoStatus;
+  paymentType?: UpdateCampaignStatusDtoPaymentType;
+  paymentTiers?: PaymentTierDto[];
 }
 
 /**
@@ -1220,6 +1297,8 @@ export interface CreateSurveyDto {
   locationFilter?: string[];
   paymentPerResponse?: number;
   questions: CreateQuestionDto[];
+  /** Client to assign the survey to (Admin only) */
+  clientId?: string;
 }
 
 export interface SurveyClientDto {
@@ -1279,7 +1358,9 @@ export const SurveyResponseDtoStatus = {
   pending: 'pending',
   approved: 'approved',
   active: 'active',
+  paused: 'paused',
   completed: 'completed',
+  closed: 'closed',
   rejected: 'rejected',
 } as const;
 
@@ -1332,7 +1413,9 @@ export const UpdateSurveyStatusDtoStatus = {
   pending: 'pending',
   approved: 'approved',
   active: 'active',
+  paused: 'paused',
   completed: 'completed',
+  closed: 'closed',
   rejected: 'rejected',
 } as const;
 
@@ -1694,7 +1777,7 @@ export type CampaignsControllerFindAllStatus = typeof CampaignsControllerFindAll
 export const CampaignsControllerFindAllStatus = {
   pending: 'pending',
   approved: 'approved',
-  active: 'active',
+  paused: 'paused',
   completed: 'completed',
   rejected: 'rejected',
 } as const;
@@ -3194,7 +3277,7 @@ export const usersControllerGetClients = (
 ) => {
       
       
-      return axiosInstance<void>(
+      return axiosInstance<ClientSummaryDto[]>(
       {url: `/api/users/clients`, method: 'GET', signal
     },
       );
@@ -5263,14 +5346,14 @@ export const useCampaignsControllerDelete = <TError = void,
  */
 export const campaignsControllerUpdateStatus = (
     id: string,
-    updateCampaignDto: UpdateCampaignDto,
+    updateCampaignStatusDto: UpdateCampaignStatusDto,
  ) => {
       
       
       return axiosInstance<void>(
       {url: `/api/campaigns/${id}/status`, method: 'PATCH',
       headers: {'Content-Type': 'application/json', },
-      data: updateCampaignDto
+      data: updateCampaignStatusDto
     },
       );
     }
@@ -5278,8 +5361,8 @@ export const campaignsControllerUpdateStatus = (
 
 
 export const getCampaignsControllerUpdateStatusMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof campaignsControllerUpdateStatus>>, TError,{id: string;data: UpdateCampaignDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof campaignsControllerUpdateStatus>>, TError,{id: string;data: UpdateCampaignDto}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof campaignsControllerUpdateStatus>>, TError,{id: string;data: UpdateCampaignStatusDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof campaignsControllerUpdateStatus>>, TError,{id: string;data: UpdateCampaignStatusDto}, TContext> => {
 
 const mutationKey = ['campaignsControllerUpdateStatus'];
 const {mutation: mutationOptions} = options ?
@@ -5291,7 +5374,7 @@ const {mutation: mutationOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof campaignsControllerUpdateStatus>>, {id: string;data: UpdateCampaignDto}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof campaignsControllerUpdateStatus>>, {id: string;data: UpdateCampaignStatusDto}> = (props) => {
           const {id,data} = props ?? {};
 
           return  campaignsControllerUpdateStatus(id,data,)
@@ -5303,18 +5386,18 @@ const {mutation: mutationOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type CampaignsControllerUpdateStatusMutationResult = NonNullable<Awaited<ReturnType<typeof campaignsControllerUpdateStatus>>>
-    export type CampaignsControllerUpdateStatusMutationBody = UpdateCampaignDto
+    export type CampaignsControllerUpdateStatusMutationBody = UpdateCampaignStatusDto
     export type CampaignsControllerUpdateStatusMutationError = unknown
 
     /**
  * @summary Update campaign status (Admin only)
  */
 export const useCampaignsControllerUpdateStatus = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof campaignsControllerUpdateStatus>>, TError,{id: string;data: UpdateCampaignDto}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof campaignsControllerUpdateStatus>>, TError,{id: string;data: UpdateCampaignStatusDto}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof campaignsControllerUpdateStatus>>,
         TError,
-        {id: string;data: UpdateCampaignDto},
+        {id: string;data: UpdateCampaignStatusDto},
         TContext
       > => {
 
